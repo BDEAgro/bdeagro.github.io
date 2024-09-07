@@ -1,0 +1,113 @@
+:root {
+    --background: #fafafa;
+    --color: #A8C300;
+    --text-color-1: #121212;
+    --text-color-2: #fafafa;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    border: none;
+    box-sizing: border-box;
+}
+
+body {
+    min-height: 100vh;
+    background: var(--background);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Open Sans', sans-serif;
+}
+
+main {
+    padding: 48px;
+    color: var(--text-color-1);
+    user-select: none;
+}
+
+
+/* Profil Card */
+
+main .profile {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+main .profile img {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+main .profile h1 {
+    font-weight: bold;
+    font-size: 24px;
+    margin-top: 16px;
+}
+
+main .social-nav {
+    margin-top: 15px;
+    list-style: none;
+    display: flex;
+}
+
+main .social-nav  .social-item {
+    margin-left: 15px;
+}
+
+main .social-nav i {
+    font-size: 20px;
+}
+
+main a {
+    font-weight: regular;
+    font-size: 18px;
+    color: var(--text-color-1);
+    text-decoration: none;
+    margin-top: 5px;
+}
+
+
+/* Link */
+
+main .links {
+    list-style-type: none;
+    margin-top: 35px;
+}
+
+main .links li {
+    border: 2px solid var(--color);
+    border-radius: 4px;
+    transition: background .2s;
+}
+
+main .links li:not(:first-child) {
+    margin-top: 15px;
+}
+
+main .links li a {
+    margin-top: 0;
+    display: block;
+    padding: 12px 40px;
+    text-align: center;
+}
+
+main .links li:hover {
+    background: var(--color);
+    /* opacity: .5; */
+}
+
+main .links li.cta {
+    background: var(--color);
+    color: var(--text-color-2);
+}
+
+main .links li.cta:hover {
+    background: var(--text-color-2);
+    color: var(--color);
+}
