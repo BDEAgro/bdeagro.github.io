@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Accueil | BDE Agro - UCLouvain</title>
+    <title>Le Club | BDE Agro - UCLouvain</title>
     <link rel="shortcut icon" href="assets/img/favicon.ico" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
@@ -23,7 +23,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="index.html">Accueil</a>
+                        <a class="nav-link" href="index.html">Accueil</a>
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
@@ -37,7 +37,7 @@
                         </ul>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="club.html">Le Club</a>
+                        <a class="nav-link active" aria-current="page" href="club.html">Le Club</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="https://www.instagram.com/buddies_agro/" target="_blank"
@@ -61,33 +61,37 @@
     </nav>
 
 
-
     <main>
+        <div class="container">
+            <h1 class="text-center">Le Club Agro</h1>
 
-        <div class="px-4 pt-5 my-5 text-center">
-            <h1 class="display-4 fw-bold text-body-emphasis">Bienvenue </h1>
-            <div class="col-lg-6 mx-auto">
-                <p class="lead mb-4">Quickly design and customize responsive mobile-first sites with Bootstrap, the
-                    world’s most popular front-end open source toolkit, featuring Sass variables and mixins, responsive
-                    grid system, extensive prebuilt components, and powerful JavaScript plugins.</p>
-                <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mb-5">
-                    <button type="button" class="btn btn-primary btn-lg px-4 me-sm-3">Primary button</button>
-                    <button type="button" class="btn btn-outline-secondary btn-lg px-4">Secondary</button>
+            <div class="accordion" id="accordionExample">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                            Liste de allergènes
+                        </button>
+                    </h2>
+                    <div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                        <div class="accordion-body">
+                            <ul>
+                                <li><strong>L'indien :</strong> Gluten, Oeufs, Moutarde, Mollusques, Poisson, Céleri, Lait, Crustacés, Sésame, Germes de soja, Lupin</li>
+                                <li><strong>Le Meat Free :</strong> Gluten, Sésame, Soja</li>
+                                <li><strong>Le Club Agro :</strong> Gluten, Oeufs, Moutarde, Lait, Soja</li>
+                                <li><strong>L'Italien :</strong> Gluten, Lait</li>
+                                <li><strong>Le Berger Apicole :</strong> Gluten, Lait</li>
+                                <li><strong>Le Saumon du Déser :</strong> Gluten, Poisson, Lait, Sulfites</li>
+                                <li><strong>Le Pezzoto :</strong> Gluten, Oeufs, Lait, Fruits à Coque</li>
+                                <li><strong>Le sandwich du mois :</strong> Varie chaque mois, contenu à demander aux bénévoles</li>
+                                <li><strong>Soupes :</strong> Gluten, Céleri, Lait, Soja</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="overflow-hidden" style="max-height: 30vh;">
-                <div class="container px-5">
-                    <img src="bootstrap-docs.png" class="img-fluid border rounded-3 shadow-lg mb-4" alt="Example image"
-                        width="700" height="500" loading="lazy">
-                </div>
-            </div>
-        </div>
-
-        <div class="container" hidden>
-            <p>Hello World</p>
         </div>
     </main>
-
 
 
 
