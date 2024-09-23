@@ -102,6 +102,10 @@ main .links li:hover {
     /* opacity: .5; */
 }
 
+.cta a {
+    color: var(--text-color-2);
+}
+
 main .links li.cta {
     background: var(--color);
     color: var(--text-color-2);
