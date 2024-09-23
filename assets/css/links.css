@@ -112,6 +112,11 @@ main .links li.cta {
 }
 
 main .links li.cta:hover {
+    background: var(--color);
+    color: var(--text-color-1);
+}
+
+main .links li.cta:hover {
     background: var(--text-color-2);
     color: var(--color);
 }
