@@ -281,9 +281,9 @@
                         <span class="ingredients-line">Chèvre · Miel · Roquette · Noix · Pomme</span>
                     </div>
                     <div class="counter">
-                        <button onclick="changer('berger', -1)">-</button>
+                        <button type="button" onclick="changer('berger', -1)">-</button>
                         <span id="berger">0</span>
-                        <button onclick="changer('berger', 1)">+</button>
+                        <button type="button" onclick="changer('berger', 1)">+</button>
                     </div>
                 </div>
 
@@ -294,9 +294,9 @@
                         <span class="ingredients-line">Jambon · Mayo · Salade</span>
                     </div>
                     <div class="counter">
-                        <button onclick="changer('club', -1)">-</button>
+                        <button type="button" onclick="changer('club', -1)">-</button>
                         <span id="club">0</span>
-                        <button onclick="changer('club', 1)">+</button>
+                        <button type="button" onclick="changer('club', 1)">+</button>
                     </div>
                 </div>
 
@@ -309,7 +309,7 @@
                     <div class="counter">
                         <button onclick="changer('meat_free', -1)">-</button>
                         <span id="meat_free">0</span>
-                        <button onclick="changer('meat_free', 1)">+</button>
+                        <button type="button" onclick="changer('meat_free', 1)">+</button>
                     </div>
                 </div>
 
@@ -320,7 +320,7 @@
                         <span class="ingredients-line">Jambon de Parme · Pesto · Roquette · Mozza · Tomate séchée</span>
                     </div>
                     <div class="counter">
-                        <button onclick="changer('italien', -1)">-</button>
+                        <button type="button" onclick="changer('italien', -1)">-</button>
                         <span id="italien">0</span>
                         <button onclick="changer('italien', 1)">+</button>
                     </div>
@@ -335,7 +335,7 @@
                     <div class="counter">
                         <button onclick="changer('norvegien', -1)">-</button>
                         <span id="norvegien">0</span>
-                        <button onclick="changer('norvegien', 1)">+</button>
+                        <button type="button" onclick="changer('norvegien', 1)">+</button>
                     </div>
                 </div>
 
@@ -349,7 +349,7 @@
                 </div>
 
                 <!-- Bouton envoyer -->
-                <button id="btnEnvoyer" class="submit-btn" onclick="envoyer()">Envoyer</button>
+                <button type="submit" id="btnEnvoyer" class="submit-btn" onclick="envoyer()">Envoyer</button>
             </form>
 
             <p id="msg" class="command-text"></p>
@@ -373,16 +373,14 @@
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbwZPAkz9kf6OOxaWv0xHBPNBKOcK5S1b0xF5LqZDRSkxCYeBgpiZJ8KtgPZgo5ZMrwj3g/exec";
 
-        // Stocke les quantités par sandwich
+        // Quantités
         let commandes = { berger: 0, club: 0, norvegien: 0, italien: 0, meat_free: 0 };
 
-        // Incrémente/décrémente sans passer sous 0
         function changer(type, delta) {
             commandes[type] = Math.max(0, commandes[type] + delta);
             document.getElementById(type).innerText = commandes[type];
         }
 
-        // Envoi vers Apps Script (écriture dans Sheets via API_URL)
         async function envoyer() {
             const prenom = document.getElementById('prenom').value.trim();
             if (!prenom) {
@@ -394,28 +392,28 @@
             btn.disabled = true;
 
             const data = {
+                action: "enregistrerCommande",
                 prenom,
                 berger: commandes.berger,
-                meat_free: commandes.meat_free,
-                norvegien: commandes.norvegien,
                 club: commandes.club,
                 italien: commandes.italien,
-                commentaire: document.getElementById('commentaire').value,
-                action: "enregistrerCommande"
+                meat_free: commandes.meat_free,
+                norvegien: commandes.norvegien,
+                commentaire: document.getElementById('commentaire').value
             };
 
             try {
                 const res = await fetch(API_URL, {
                     method: "POST",
-                    body: JSON.stringify(data)
+                    body: JSON.stringify(data),
+                    headers: { "Content-Type": "application/json" }
                 });
                 const json = await res.json();
-
-                document.getElementById("msg").innerText = json.message || "Votre commande a bien été enregistrée ✅";
+                document.getElementById("msg").innerText = json.message || "Commande envoyée ✅";
             } catch (err) {
                 console.error(err);
-                document.getElementById("msg").innerText = "❌ Erreur lors de l’envoi de la commande";
-                btn.disabled = false; // réactive le bouton si erreur
+                document.getElementById("msg").innerText = "❌ Erreur lors de l’envoi";
+                btn.disabled = false;
             }
         }
     </script>
