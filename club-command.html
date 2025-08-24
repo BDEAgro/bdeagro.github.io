@@ -266,7 +266,8 @@
                 non-étudiants. Cette initiative vise à maintenir des prix abordables pour les étudiants, dans le but de
                 lutter contre la précarité étudiante.</p>
 
-            <form id="commandeForm">
+            <form id="commandeForm" method="POST" target="hidden_iframe"
+                action="https://script.google.com/macros/s/AKfycbwZPAkz9kf6OOxaWv0xHBPNBKOcK5S1b0xF5LqZDRSkxCYeBgpiZJ8KtgPZgo5ZMrwj3g/exec">
                 <!-- Prénom -->
                 <label class="command-label">Prénom :</label>
                 <input class="command-input" id="prenom" type="text" placeholder="Votre prénom" required>
@@ -352,7 +353,11 @@
                 <button type="submit" id="btnEnvoyer" class="submit-btn" onclick="envoyer()">Envoyer</button>
             </form>
 
-            <p id="msg" class="command-text"></p>
+            <!-- Iframe caché pour éviter de quitter la page -->
+            <iframe name="hidden_iframe" style="display:none;"></iframe>
+
+            <!-- Message de confirmation -->
+            <p id="confirmation" style="display:none; color:green;">✅ Merci, votre commande a été envoyée !</p>
         </div>
     </div>
 
@@ -371,8 +376,6 @@
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous">
         </script>
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbwZPAkz9kf6OOxaWv0xHBPNBKOcK5S1b0xF5LqZDRSkxCYeBgpiZJ8KtgPZgo5ZMrwj3g/exec";
-
         // Quantités
         let commandes = { berger: 0, club: 0, norvegien: 0, italien: 0, meat_free: 0 };
 
@@ -402,19 +405,12 @@
                 commentaire: document.getElementById('commentaire').value
             };
 
-            try {
-                const res = await fetch(API_URL, {
-                    method: "POST",
-                    body: JSON.stringify(data),
-                    headers: { "Content-Type": "application/json" }
-                });
-                const json = await res.json();
-                document.getElementById("msg").innerText = json.message || "Commande envoyée ✅";
-            } catch (err) {
-                console.error(err);
-                document.getElementById("msg").innerText = "❌ Erreur lors de l’envoi";
-                btn.disabled = false;
-            }
+            document.getElementById("commandeForm").addEventListener("submit", function (e) {
+                // Empêche la redirection (grâce à target="hidden_iframe")
+                document.getElementById("confirmation").style.display = "block";
+                // Optionnel : vider le formulaire
+                this.reset();
+            });
         }
     </script>
     <script src="assets/js/script.js"></script>
