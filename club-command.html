@@ -14,9 +14,7 @@
     <style>
         /* === Base === */
         body {
-            font-family: Arial, sans-serif;
             background: #d7f0d7;
-            margin: 0;
         }
 
         /* Conteneur du formulaire : overflow:hidden pour que le bandeau vert
@@ -47,13 +45,13 @@
             /* padding bas pour ne pas chevaucher le bouton */
         }
 
-        h2 {
+        .command-title {
             text-align: center;
             color: #333;
             margin: 0 0 10px 0;
         }
 
-        p {
+        .command-text {
             text-align: center;
             color: #555;
             margin: 6px 0 18px 0;
@@ -70,12 +68,12 @@
             margin-bottom: 22px;
         }
 
-        label {
+        .command-label {
             font-weight: bold;
             color: #333;
         }
 
-        input,
+        .command-input,
         textarea {
             width: 100%;
             padding: 10px;
@@ -261,7 +259,7 @@
     </nav>
     <!-- End Navigation -->
 
-    
+
     <div class="container">
         <!-- Bandeau vert collé aux bords -->
         <div class="hat"></div>
@@ -269,16 +267,16 @@
         <!-- Contenu avec padding -->
         <div class="content">
             <!-- En-tête -->
-            <h2>Commande Sandwich - Club Agro</h2>
-            <p>Bienvenue ! Commandez vos sandwichs avant 12h et venez les récupérer dès 12h45 au Club Agro.</p>
-            <p class="important">Le paiement ce fait par carte ou en cash !</p>
-            <p class="italic">Les tarifs étudiants sont indiqués ci-dessous. Tous les sandwichs sont à 4€ pour les
+            <h2 class="command-title">Commande Sandwich - Club Agro</h2>
+            <p class="command-text">Bienvenue ! Commandez vos sandwichs avant 12h et venez les récupérer dès 12h45 au Club Agro.</p>
+            <p class="command-text important">Le paiement ce fait par carte ou en cash !</p>
+            <p class="command-text italic">Les tarifs étudiants sont indiqués ci-dessous. Tous les sandwichs sont à 4€ pour les
                 non-étudiants. Cette initiative vise à maintenir des prix abordables pour les étudiants, dans le but de
                 lutter contre la précarité étudiante.</p>
 
             <!-- Prénom -->
-            <label>Prénom :</label>
-            <input id="prenom" type="text" placeholder="Votre prénom" required>
+            <label class="command-label">Prénom :</label>
+            <input class="command-input" id="prenom" type="text" placeholder="Votre prénom" required>
 
             <!-- Section sandwichs -->
             <div class="section-title">Nos sandwichs :</div>
@@ -351,16 +349,19 @@
             <!-- Commentaire -->
             <div id="comment-section">
                 <h3>Commentaire</h3>
-                <p class="subtext">Si vous souhaitez retirer un ingrédient de votre sandwich, veuillez nous le faire
+                <p class="subtext command-text">Si vous souhaitez retirer un ingrédient de votre sandwich, veuillez nous le faire
                     savoir ici.</p>
                 <textarea id="commentaire" rows="3" placeholder="Précisez vos préférences..."></textarea>
             </div>
 
             <!-- Bouton envoyer -->
             <button id="btnEnvoyer" class="submit-btn" onclick="envoyer()">Envoyer</button>
-            <p id="msg"></p>
+            <p id="msg" class="command-text"></p>
         </div>
     </div>
+
+
+
 
     <!-- Footer -->
     <footer class="footer mt-5 py-3 bg-body-tertiary">
