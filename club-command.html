@@ -197,7 +197,7 @@
 </head>
 
 <body class="h-100">
-        <!-- Navigation -->
+    <!-- Navigation -->
     <nav class="navbar navbar-expand-lg" style="background-color: #A8C302;">
         <div class="container">
             <a href="index.html" class="navbar-brand me-2"><img src="assets/img/logo.jpg" alt="" width="35"
@@ -258,9 +258,11 @@
         <div class="content">
             <!-- En-tête -->
             <h2 class="command-title">Commande Sandwich - Club Agro</h2>
-            <p class="command-text">Bienvenue ! Commandez vos sandwichs avant 12h et venez les récupérer dès 12h45 au Club Agro.</p>
+            <p class="command-text">Bienvenue ! Commandez vos sandwichs avant 12h et venez les récupérer dès 12h45 au
+                Club Agro.</p>
             <p class="command-text important">Le paiement ce fait par carte ou en cash !</p>
-            <p class="command-text italic">Les tarifs étudiants sont indiqués ci-dessous. Tous les sandwichs sont à 4€ pour les
+            <p class="command-text italic">Les tarifs étudiants sont indiqués ci-dessous. Tous les sandwichs sont à 4€
+                pour les
                 non-étudiants. Cette initiative vise à maintenir des prix abordables pour les étudiants, dans le but de
                 lutter contre la précarité étudiante.</p>
 
@@ -339,7 +341,8 @@
             <!-- Commentaire -->
             <div id="comment-section">
                 <h3>Commentaire</h3>
-                <p class="subtext command-text">Si vous souhaitez retirer un ingrédient de votre sandwich, veuillez nous le faire
+                <p class="subtext command-text">Si vous souhaitez retirer un ingrédient de votre sandwich, veuillez nous
+                    le faire
                     savoir ici.</p>
                 <textarea id="commentaire" rows="3" placeholder="Précisez vos préférences..."></textarea>
             </div>
@@ -362,6 +365,22 @@
     <!-- End Footer -->
 
     <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbwZPAkz9kf6OOxaWv0xHBPNBKOcK5S1b0xF5LqZDRSkxCYeBgpiZJ8KtgPZgo5ZMrwj3g/exec";
+
+        document.getElementById("commandeForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            data.action = "enregistrerCommande";
+
+            const res = await fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify(data)
+            });
+            const json = await res.json();
+            document.getElementById("result").innerText = json.message || "Erreur...";
+        });
+
         // Stocke les quantités par sandwich
         let commandes = { berger: 0, club: 0, norvegien: 0, italien: 0, meat_free: 0 };
 
