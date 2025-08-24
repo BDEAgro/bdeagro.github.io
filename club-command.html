@@ -266,89 +266,92 @@
                 non-étudiants. Cette initiative vise à maintenir des prix abordables pour les étudiants, dans le but de
                 lutter contre la précarité étudiante.</p>
 
-            <!-- Prénom -->
-            <label class="command-label">Prénom :</label>
-            <input class="command-input" id="prenom" type="text" placeholder="Votre prénom" required>
+            <form id="commandeForm">
+                <!-- Prénom -->
+                <label class="command-label">Prénom :</label>
+                <input class="command-input" id="prenom" type="text" placeholder="Votre prénom" required>
 
-            <!-- Section sandwichs -->
-            <div class="section-title">Nos sandwichs :</div>
+                <!-- Section sandwichs -->
+                <div class="section-title">Nos sandwichs :</div>
 
-            <!-- Sandwich 1 : nom/prix AU-DESSUS, ingrédients EN-DESSOUS (compact) -->
-            <div class="sandwich">
-                <div class="sandwich-info">
-                    <span class="sandwich-title">Sandwich Berger Apicole (3,50€ étudiant)</span>
-                    <span class="ingredients-line">Chèvre · Miel · Roquette · Noix · Pomme</span>
+                <!-- Sandwich 1 : nom/prix AU-DESSUS, ingrédients EN-DESSOUS (compact) -->
+                <div class="sandwich">
+                    <div class="sandwich-info">
+                        <span class="sandwich-title">Sandwich Berger Apicole (3,50€ étudiant)</span>
+                        <span class="ingredients-line">Chèvre · Miel · Roquette · Noix · Pomme</span>
+                    </div>
+                    <div class="counter">
+                        <button onclick="changer('berger', -1)">-</button>
+                        <span id="berger">0</span>
+                        <button onclick="changer('berger', 1)">+</button>
+                    </div>
                 </div>
-                <div class="counter">
-                    <button onclick="changer('berger', -1)">-</button>
-                    <span id="berger">0</span>
-                    <button onclick="changer('berger', 1)">+</button>
-                </div>
-            </div>
 
-            <!-- Sandwich 2 -->
-            <div class="sandwich">
-                <div class="sandwich-info">
-                    <span class="sandwich-title">Sandwich Club (3,00€ étudiant)</span>
-                    <span class="ingredients-line">Jambon · Mayo · Salade</span>
+                <!-- Sandwich 2 -->
+                <div class="sandwich">
+                    <div class="sandwich-info">
+                        <span class="sandwich-title">Sandwich Club (3,00€ étudiant)</span>
+                        <span class="ingredients-line">Jambon · Mayo · Salade</span>
+                    </div>
+                    <div class="counter">
+                        <button onclick="changer('club', -1)">-</button>
+                        <span id="club">0</span>
+                        <button onclick="changer('club', 1)">+</button>
+                    </div>
                 </div>
-                <div class="counter">
-                    <button onclick="changer('club', -1)">-</button>
-                    <span id="club">0</span>
-                    <button onclick="changer('club', 1)">+</button>
-                </div>
-            </div>
 
-            <!-- Sandwich 3 -->
-            <div class="sandwich">
-                <div class="sandwich-info">
-                    <span class="sandwich-title">Sandwich Meat_Free (3,00€ étudiant)</span>
-                    <span class="ingredients-line">Jambon · Beurre · Salade</span>
+                <!-- Sandwich 3 -->
+                <div class="sandwich">
+                    <div class="sandwich-info">
+                        <span class="sandwich-title">Sandwich Meat_Free (3,00€ étudiant)</span>
+                        <span class="ingredients-line">Jambon · Beurre · Salade</span>
+                    </div>
+                    <div class="counter">
+                        <button onclick="changer('meat_free', -1)">-</button>
+                        <span id="meat_free">0</span>
+                        <button onclick="changer('meat_free', 1)">+</button>
+                    </div>
                 </div>
-                <div class="counter">
-                    <button onclick="changer('meat_free', -1)">-</button>
-                    <span id="meat_free">0</span>
-                    <button onclick="changer('meat_free', 1)">+</button>
-                </div>
-            </div>
 
-            <!-- Sandwich 4 -->
-            <div class="sandwich">
-                <div class="sandwich-info">
-                    <span class="sandwich-title">Sandwich Italien (3,00€ étudiant)</span>
-                    <span class="ingredients-line">Jambon de Parme · Pesto · Roquette · Mozza · Tomate séchée</span>
+                <!-- Sandwich 4 -->
+                <div class="sandwich">
+                    <div class="sandwich-info">
+                        <span class="sandwich-title">Sandwich Italien (3,00€ étudiant)</span>
+                        <span class="ingredients-line">Jambon de Parme · Pesto · Roquette · Mozza · Tomate séchée</span>
+                    </div>
+                    <div class="counter">
+                        <button onclick="changer('italien', -1)">-</button>
+                        <span id="italien">0</span>
+                        <button onclick="changer('italien', 1)">+</button>
+                    </div>
                 </div>
-                <div class="counter">
-                    <button onclick="changer('italien', -1)">-</button>
-                    <span id="italien">0</span>
-                    <button onclick="changer('italien', 1)">+</button>
-                </div>
-            </div>
 
-            <!-- Sandwich 5 -->
-            <div class="sandwich">
-                <div class="sandwich-info">
-                    <span class="sandwich-title">Sandwich Norvégien (3,00€ étudiant)</span>
-                    <span class="ingredients-line">Saumon · Philadelphia · Salade</span>
+                <!-- Sandwich 5 -->
+                <div class="sandwich">
+                    <div class="sandwich-info">
+                        <span class="sandwich-title">Sandwich Norvégien (3,00€ étudiant)</span>
+                        <span class="ingredients-line">Saumon · Philadelphia · Salade</span>
+                    </div>
+                    <div class="counter">
+                        <button onclick="changer('norvegien', -1)">-</button>
+                        <span id="norvegien">0</span>
+                        <button onclick="changer('norvegien', 1)">+</button>
+                    </div>
                 </div>
-                <div class="counter">
-                    <button onclick="changer('norvegien', -1)">-</button>
-                    <span id="norvegien">0</span>
-                    <button onclick="changer('norvegien', 1)">+</button>
+
+                <!-- Commentaire -->
+                <div id="comment-section">
+                    <h3>Commentaire</h3>
+                    <p class="subtext command-text">Si vous souhaitez retirer un ingrédient de votre sandwich, veuillez
+                        nous
+                        le faire savoir ici.</p>
+                    <textarea id="commentaire" rows="3" placeholder="Précisez vos préférences..."></textarea>
                 </div>
-            </div>
 
-            <!-- Commentaire -->
-            <div id="comment-section">
-                <h3>Commentaire</h3>
-                <p class="subtext command-text">Si vous souhaitez retirer un ingrédient de votre sandwich, veuillez nous
-                    le faire
-                    savoir ici.</p>
-                <textarea id="commentaire" rows="3" placeholder="Précisez vos préférences..."></textarea>
-            </div>
+                <!-- Bouton envoyer -->
+                <button id="btnEnvoyer" class="submit-btn" onclick="envoyer()">Envoyer</button>
+            </form>
 
-            <!-- Bouton envoyer -->
-            <button id="btnEnvoyer" class="submit-btn" onclick="envoyer()">Envoyer</button>
             <p id="msg" class="command-text"></p>
         </div>
     </div>
@@ -364,22 +367,11 @@
     </footer>
     <!-- End Footer -->
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous">
+        </script>
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbwZPAkz9kf6OOxaWv0xHBPNBKOcK5S1b0xF5LqZDRSkxCYeBgpiZJ8KtgPZgo5ZMrwj3g/exec";
-
-        document.getElementById("commandeForm").addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const data = Object.fromEntries(formData.entries());
-            data.action = "enregistrerCommande";
-
-            const res = await fetch(API_URL, {
-                method: "POST",
-                body: JSON.stringify(data)
-            });
-            const json = await res.json();
-            document.getElementById("result").innerText = json.message || "Erreur...";
-        });
 
         // Stocke les quantités par sandwich
         let commandes = { berger: 0, club: 0, norvegien: 0, italien: 0, meat_free: 0 };
@@ -390,15 +382,14 @@
             document.getElementById(type).innerText = commandes[type];
         }
 
-        // Envoi vers Apps Script (écriture dans Sheets)
-        function envoyer() {
-
+        // Envoi vers Apps Script (écriture dans Sheets via API_URL)
+        async function envoyer() {
             const prenom = document.getElementById('prenom').value.trim();
             if (!prenom) {
                 alert("Veuillez entrer votre prénom avant de valider la commande.");
                 return;
             }
-            // désactiver définitivement le bouton pour éviter le double-clic
+
             const btn = document.getElementById("btnEnvoyer");
             btn.disabled = true;
 
@@ -409,20 +400,25 @@
                 norvegien: commandes.norvegien,
                 club: commandes.club,
                 italien: commandes.italien,
-                commentaire: document.getElementById('commentaire').value
+                commentaire: document.getElementById('commentaire').value,
+                action: "enregistrerCommande"
             };
-            google.script.run.withSuccessHandler(() => {
-                // Affichage message de confirmation
-                document.body.innerHTML = `<div style="text-align:center; margin-top:50px; font-family:Arial;">
-       <h2>Merci d'avoir commandé chez nous !</h2>
-       <p>Votre commande est bien enregistrée.</p>
-       </div>`;
-            }).enregistrerCommande(data);
+
+            try {
+                const res = await fetch(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify(data)
+                });
+                const json = await res.json();
+
+                document.getElementById("msg").innerText = json.message || "Votre commande a bien été enregistrée ✅";
+            } catch (err) {
+                console.error(err);
+                document.getElementById("msg").innerText = "❌ Erreur lors de l’envoi de la commande";
+                btn.disabled = false; // réactive le bouton si erreur
+            }
         }
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous">
-        </script>
     <script src="assets/js/script.js"></script>
 </body>
 
