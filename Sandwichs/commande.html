@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-100">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Commandez vos sandwichs au Club Agro - BDE Agro UCLouvain">
+    <title>Commander - Club Agro | BDE Agro - UCLouvain</title>
+    <link rel="shortcut icon" href="../assets/img/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png" sizes="180x180">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <style>
+        :root {
+            --agro-green: #A8C302;
+            --agro-dark-green: #2e7d32;
+        }
+
+        .sandwich-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .sandwich-header {
+            background: linear-gradient(135deg, var(--agro-green), var(--agro-dark-green));
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin: -2rem -2rem 2rem -2rem;
+            border-radius: 15px 15px 0 0;
+        }
+
+        .sandwich-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            background: white;
+            border-radius: 10px;
+            border-left: 4px solid var(--agro-green);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .sandwich-info {
+            flex-grow: 1;
+        }
+
+        .sandwich-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.25rem;
+        }
+
+        .sandwich-ingredients {
+            color: var(--agro-dark-green);
+            font-size: 0.9rem;
+        }
+
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .qty-btn {
+            background: var(--agro-green);
+            color: white;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .qty-btn:hover {
+            background: var(--agro-dark-green);
+            transform: scale(1.1);
+        }
+
+        .qty-display {
+            font-weight: bold;
+            min-width: 30px;
+            text-align: center;
+            color: #333;
+        }
+
+        .alert-info {
+            background-color: #e8f5e8;
+            border-color: var(--agro-green);
+            color: var(--agro-dark-green);
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, var(--agro-green), var(--agro-dark-green));
+            border: none;
+            padding: 12px 30px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(168, 195, 2, 0.4);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+            min-width: 300px;
+        }
+    </style>
+</head>
+
+<body class="d-flex flex-column h-100">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg" style="background-color: #A8C302;">
+        <div class="container">
+            <a href="../index.html" class="navbar-brand me-2"><img src="../assets/img/logo.jpg" alt="" width="35"
+                    height="35"></a>
+            <a href="../index.html" class="navbar-brand link-light">BDE Agro</a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarToggler"
+                aria-controls="navbarToggler" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarToggler">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link link-light" href="../index.html">Accueil</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle link-light" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            Le BDE
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="../mission.html">Objectifs & Missions</a></li>
+                            <li><a class="dropdown-item" href="../team.html">L'équipe</a></li>
+                            <li><a class="dropdown-item" href="../events.html">Nos Events</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle link-light active" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            Le Club
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="../club.html">Présentation</a></li>
+                            <li><a class="dropdown-item active" href="commande.html">Commander</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link link-light" href="https://www.instagram.com/buddies_agro/" target="_blank"
+                            rel="noopener">Les Buddies</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link link-light" href="https://www.instagram.com/cercle_agro/" target="_blank"
+                            rel="noopener">Le Cercle Agro</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link link-light" href="../drive.html">Le Drive</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link link-light" href="../links.html">Contact</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn btn-success" href="https://discord.gg/6X54kfAVGX" target="_blank"
+                            rel="noopener">Discord</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <!-- End Navigation -->
+
+    <!-- Main Content -->
+    <main class="flex-shrink-0">
+        <div class="container">
+            <div class="sandwich-container">
+                <div class="sandwich-header">
+                    <h1>Commande Sandwich - Club Agro</h1>
+                    <p class="mb-0">Commandez avant 12h, récupérez dès 12h45 au Club Agro</p>
+                </div>
+
+                <!-- Informations importantes -->
+                <div class="alert alert-info" role="alert">
+                    <strong>Informations importantes :</strong><br>
+                    • Le paiement se fait par carte ou en cash<br>
+                    • Tarifs étudiants indiqués ci-dessous<br>
+                    • Tous les sandwichs sont à 4€ pour les non-étudiants<br>
+                    • Initiative contre la précarité étudiante
+                </div>
+
+                <!-- Formulaire -->
+                <form id="commandeForm">
+                    <div class="mb-4">
+                        <label for="prenom" class="form-label fw-bold">Prénom *</label>
+                        <input type="text" class="form-control" id="prenom" placeholder="Votre prénom" required>
+                    </div>
+
+                    <h3 class="mb-3" style="color: var(--agro-dark-green);">Nos sandwichs</h3>
+
+                    <!-- Sandwichs -->
+                    <div class="sandwich-item">
+                        <div class="sandwich-info">
+                            <div class="sandwich-title">Sandwich Berger Apicole (3,50€ étudiant)</div>
+                            <div class="sandwich-ingredients">Chèvre • Miel • Roquette • Noix • Pomme</div>
+                        </div>
+                        <div class="quantity-controls">
+                            <button type="button" class="qty-btn" onclick="changerQuantite('berger', -1)">-</button>
+                            <span class="qty-display" id="berger-qty">0</span>
+                            <button type="button" class="qty-btn" onclick="changerQuantite('berger', 1)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="sandwich-item">
+                        <div class="sandwich-info">
+                            <div class="sandwich-title">Sandwich Club (3,00€ étudiant)</div>
+                            <div class="sandwich-ingredients">Jambon • Mayo • Salade</div>
+                        </div>
+                        <div class="quantity-controls">
+                            <button type="button" class="qty-btn" onclick="changerQuantite('club', -1)">-</button>
+                            <span class="qty-display" id="club-qty">0</span>
+                            <button type="button" class="qty-btn" onclick="changerQuantite('club', 1)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="sandwich-item">
+                        <div class="sandwich-info">
+                            <div class="sandwich-title">Sandwich Meat Free (3,00€ étudiant)</div>
+                            <div class="sandwich-ingredients">Légumes grillés • Houmous • Avocat</div>
+                        </div>
+                        <div class="quantity-controls">
+                            <button type="button" class="qty-btn" onclick="changerQuantite('meat_free', -1)">-</button>
+                            <span class="qty-display" id="meat_free-qty">0</span>
+                            <button type="button" class="qty-btn" onclick="changerQuantite('meat_free', 1)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="sandwich-item">
+                        <div class="sandwich-info">
+                            <div class="sandwich-title">Sandwich Italien (3,00€ étudiant)</div>
+                            <div class="sandwich-ingredients">Jambon de Parme • Pesto • Roquette • Mozza • Tomate séchée</div>
+                        </div>
+                        <div class="quantity-controls">
+                            <button type="button" class="qty-btn" onclick="changerQuantite('italien', -1)">-</button>
+                            <span class="qty-display" id="italien-qty">0</span>
+                            <button type="button" class="qty-btn" onclick="changerQuantite('italien', 1)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="sandwich-item">
+                        <div class="sandwich-info">
+                            <div class="sandwich-title">Sandwich Norvégien (3,00€ étudiant)</div>
+                            <div class="sandwich-ingredients">Saumon • Philadelphia • Salade</div>
+                        </div>
+                        <div class="quantity-controls">
+                            <button type="button" class="qty-btn" onclick="changerQuantite('norvegien', -1)">-</button>
+                            <span class="qty-display" id="norvegien-qty">0</span>
+                            <button type="button" class="qty-btn" onclick="changerQuantite('norvegien', 1)">+</button>
+                        </div>
+                    </div>
+
+                    <!-- Commentaire -->
+                    <div class="mt-4">
+                        <label for="commentaire" class="form-label fw-bold">Commentaire</label>
+                        <textarea class="form-control" id="commentaire" rows="3" 
+                                placeholder="Indiquez ici si vous souhaitez retirer un ingrédient..."></textarea>
+                        <small class="text-muted">Allergies, préférences particulières, etc.</small>
+                    </div>
+
+                    <!-- Bouton -->
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-submit text-white" id="btnEnvoyer">
+                            Envoyer ma commande
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+
+    <!-- Footer -->
+    <footer class="footer mt-5 py-3 bg-body-tertiary">
+        <div class="container text-center">
+            <span class="text-body-secondary">&copy; 2024 - BDE Agro (Université Catholique de Louvain)</span>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous">
+    </script>
+
+    <script>
+        // Configuration API
+        const API_URL = "https://script.google.com/macros/s/AKfycbwZPAkz9kf6OOxaWv0xHBPNBKOcK5S1b0xF5LqZDRSkxCYeBgpiZJ8KtgPZgo5ZMrwj3g/exec";
+
+        // État des commandes
+        let commandes = {
+            berger: 0,
+            club: 0,
+            meat_free: 0,
+            italien: 0,
+            norvegien: 0
+        };
+
+        // Fonction pour changer les quantités
+        function changerQuantite(type, delta) {
+            commandes[type] = Math.max(0, commandes[type] + delta);
+            document.getElementById(type + '-qty').textContent = commandes[type];
+        }
+
+        // Fonction pour appeler l'API
+        async function envoyerCommande(data) {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'enregistrerCommande',
+                        ...data
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    afficherNotification('Commande enregistrée avec succès!', 'success');
+                    // Réinitialiser le formulaire
+                    document.getElementById('commandeForm').reset();
+                    commandes = { berger: 0, club: 0, meat_free: 0, italien: 0, norvegien: 0 };
+                    Object.keys(commandes).forEach(type => {
+                        document.getElementById(type + '-qty').textContent = '0';
+                    });
+                } else {
+                    throw new Error(result.message || 'Erreur lors de l\'enregistrement');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                afficherNotification('Erreur lors de l\'envoi de la commande. Veuillez réessayer.', 'error');
+            }
+        }
+
+        // Fonction pour afficher les notifications
+        function afficherNotification(message, type) {
+            const notification = document.getElementById('notification');
+            notification.innerHTML = `
+                <div class="alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            // Auto-masquer après 5 secondes
+            setTimeout(() => {
+                const alert = notification.querySelector('.alert');
+                if (alert) {
+                    alert.remove();
+                }
+            }, 5000);
+        }
+
+        // Gestionnaire de soumission du formulaire
+        document.getElementById('commandeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const prenom = document.getElementById('prenom').value.trim();
+            const commentaire = document.getElementById('commentaire').value.trim();
+            
+            // Vérifications
+            if (!prenom) {
+                afficherNotification('Veuillez entrer votre prénom.', 'error');
+                return;
+            }
+
+            const totalSandwichs = Object.values(commandes).reduce((sum, qty) => sum + qty, 0);
+            if (totalSandwichs === 0) {
+                afficherNotification('Veuillez sélectionner au moins un sandwich.', 'error');
+                return;
+            }
+
+            // Désactiver le bouton pendant l'envoi
+            const btnEnvoyer = document.getElementById('btnEnvoyer');
+            const textOriginal = btnEnvoyer.textContent;
+            btnEnvoyer.disabled = true;
+            btnEnvoyer.textContent = 'Envoi en cours...';
+
+            try {
+                await envoyerCommande({
+                    prenom,
+                    berger: commandes.berger,
+                    club: commandes.club,
+                    meat_free: commandes.meat_free,
+                    italien: commandes.italien,
+                    norvegien: commandes.norvegien,
+                    commentaire
+                });
+            } finally {
+                // Réactiver le bouton
+                btnEnvoyer.disabled = false;
+                btnEnvoyer.textContent = textOriginal;
+            }
+        });
+    </script>
+</body>
+
+</html>
