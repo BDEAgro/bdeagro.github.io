@@ -192,7 +192,7 @@
                 
                 if (tempsEcoule < 3600000) { // 1 heure
                     // Rediriger vers la page admin
-                    window.location.href = 'admin.html';
+                    window.location.href = 'dashboard.html';
                     return true;
                 } else {
                     // Token expiré, le supprimer
@@ -237,7 +237,7 @@
                 
                 // Rediriger après un court délai
                 setTimeout(() => {
-                    window.location.href = 'admin.html';
+                    window.location.href = 'dashboard.html';
                 }, 1000);
                 
             } catch (error) {
