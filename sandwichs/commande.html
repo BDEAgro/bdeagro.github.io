@@ -323,38 +323,78 @@
             document.getElementById(type + '-qty').textContent = commandes[type];
         }
 
-        // Fonction pour appeler l'API
-        async function envoyerCommande(data) {
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'enregistrerCommande',
-                        ...data
-                    })
-                });
+        // Fonction pour appeler l'API avec debugging amélioré
+           async function envoyerCommande(data) {
+             console.log('=== DÉBUT ENVOI COMMANDE ===');
+             console.log('Données à envoyer:', data);
+             console.log('URL API:', API_URL);
+    
+           try {
+              const requestBody = {
+                 action: 'enregistrerCommande',
+                 ...data
+               };
+        
+             console.log('Corps de la requête:', JSON.stringify(requestBody, null, 2));
+        
+             const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                   'Content-Type': 'application/json',
+               },
+               body: JSON.stringify(requestBody)
+             });
 
-                const result = await response.json();
-                
-                if (result.success) {
-                    afficherNotification('Commande enregistrée avec succès!', 'success');
-                    // Réinitialiser le formulaire
-                    document.getElementById('commandeForm').reset();
-                    commandes = { berger: 0, club: 0, meat_free: 0, italien: 0, norvegien: 0 };
-                    Object.keys(commandes).forEach(type => {
-                        document.getElementById(type + '-qty').textContent = '0';
-                    });
-                } else {
-                    throw new Error(result.message || 'Erreur lors de l\'enregistrement');
-                }
-            } catch (error) {
-                console.error('Erreur:', error);
-                afficherNotification('Erreur lors de l\'envoi de la commande. Veuillez réessayer.', 'error');
+             console.log('Statut de la réponse:', response.status);
+             console.log('Headers de la réponse:', response.headers);
+        
+           // Lire la réponse en tant que texte d'abord pour voir ce qui est retourné
+            const responseText = await response.text();
+            console.log('Réponse brute:', responseText);
+        
+            let result;
+            try {
+               result = JSON.parse(responseText);
+               console.log('Réponse parsée:', result);
+           } catch (parseError) {
+               console.error('Erreur de parsing JSON:', parseError);
+               throw new Error('Réponse du serveur invalide');
+           }
+        
+            if (result.success) {
+               afficherNotification('Commande enregistrée avec succès!', 'success');
+               // Réinitialiser le formulaire
+                document.getElementById('commandeForm').reset();
+                commandes = { berger: 0, club: 0, meat_free: 0, italien: 0, norvegien: 0 };
+                Object.keys(commandes).forEach(type => {
+                document.getElementById(type + '-qty').textContent = '0';
+               });
+            } else {
+                console.error('Erreur API:', result.message);
+               throw new Error(result.message || 'Erreur lors de l\'enregistrement');
             }
-        }
+            } catch (error) {
+               console.error('=== ERREUR COMPLÈTE ===');
+               console.error('Type d\'erreur:', error.name);
+               console.error('Message:', error.message);
+               console.error('Stack:', error.stack);
+        
+               let messageErreur = 'Erreur lors de l\'envoi de la commande. ';
+        
+             if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                 messageErreur += 'Problème de connexion réseau. Vérifiez votre connexion internet.';
+                } else if (error.message.includes('Réponse du serveur invalide')) {
+                   messageErreur += 'Le serveur a retourné une réponse invalide.';
+                } else {
+                     messageErreur += 'Veuillez réessayer. Si le problème persiste, contactez le support.';
+                }  
+        
+             afficherNotification(messageErreur, 'error');
+            throw error;
+            } finally {
+              console.log('=== FIN ENVOI COMMANDE ===');
+          }
+         }
 
         // Fonction pour afficher les notifications
         function afficherNotification(message, type) {
