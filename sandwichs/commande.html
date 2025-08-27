@@ -306,159 +306,180 @@
 
     <script>
         // Configuration API
-        const API_URL = "https://script.google.com/macros/s/AKfycbwSDp_vaj1ZjATBibQHi-50OL380L_Rcz7sEFhyzbiuLUygq_TJm-zADHhvpoPFtPWRuQ/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwSDp_vaj1ZjATBibQHi-50OL380L_Rcz7sEFhyzbiuLUygq_TJm-zADHhvpoPFtPWRuQ/exec";
 
-        // État des commandes
-        let commandes = {
-            berger: 0,
-            club: 0,
-            meat_free: 0,
-            italien: 0,
-            norvegien: 0
+// État des commandes
+let commandes = {
+    berger: 0,
+    club: 0,
+    meat_free: 0,
+    italien: 0,
+    norvegien: 0
+};
+
+// Fonction pour changer les quantités
+function changerQuantite(type, delta) {
+    commandes[type] = Math.max(0, commandes[type] + delta);
+    document.getElementById(type + '-qty').textContent = commandes[type];
+}
+
+// Fonction JSONP pour contourner CORS
+function envoyerCommandeJSONP(data) {
+    return new Promise((resolve, reject) => {
+        // Créer un nom de callback unique
+        const callbackName = 'callback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        
+        // Créer la fonction callback globale
+        window[callbackName] = function(response) {
+            // Nettoyer
+            document.head.removeChild(script);
+            delete window[callbackName];
+            
+            if (response.success) {
+                resolve(response);
+            } else {
+                reject(new Error(response.message || 'Erreur inconnue'));
+            }
         };
+        
+        // Créer l'URL avec tous les paramètres
+        const params = new URLSearchParams({
+            action: 'enregistrerCommande',
+            callback: callbackName,
+            prenom: data.prenom || '',
+            berger: data.berger || 0,
+            club: data.club || 0,
+            meat_free: data.meat_free || 0,
+            italien: data.italien || 0,
+            norvegien: data.norvegien || 0,
+            commentaire: data.commentaire || ''
+        });
+        
+        const url = `${API_URL}?${params.toString()}`;
+        console.log('URL JSONP:', url);
+        
+        // Créer et ajouter le script
+        const script = document.createElement('script');
+        script.src = url;
+        script.onerror = function() {
+            document.head.removeChild(script);
+            delete window[callbackName];
+            reject(new Error('Erreur de réseau'));
+        };
+        
+        document.head.appendChild(script);
+        
+        // Timeout de sécurité
+        setTimeout(() => {
+            if (window[callbackName]) {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                reject(new Error('Timeout'));
+            }
+        }, 10000);
+    });
+}
 
-        // Fonction pour changer les quantités
-        function changerQuantite(type, delta) {
-            commandes[type] = Math.max(0, commandes[type] + delta);
-            document.getElementById(type + '-qty').textContent = commandes[type];
-        }
-
-       // Fonction alternative pour éviter les requêtes preflight
+// Fonction principale d'envoi
 async function envoyerCommande(data) {
-    console.log('=== DÉBUT ENVOI COMMANDE ===');
+    console.log('=== DÉBUT ENVOI COMMANDE JSONP ===');
     console.log('Données à envoyer:', data);
     
     try {
-        // Créer un FormData pour éviter les requêtes preflight OPTIONS
-        const formData = new FormData();
-        const requestData = {
-            action: 'enregistrerCommande',
-            ...data
-        };
+        const result = await envoyerCommandeJSONP(data);
+        console.log('Réponse reçue:', result);
         
-        formData.append('data', JSON.stringify(requestData));
+        afficherNotification('Commande enregistrée avec succès!', 'success');
         
-        console.log('Envoi vers:', API_URL);
-        
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            body: formData, // Utiliser FormData au lieu de JSON
-            mode: 'cors'
+        // Réinitialiser le formulaire
+        document.getElementById('commandeForm').reset();
+        commandes = { berger: 0, club: 0, meat_free: 0, italien: 0, norvegien: 0 };
+        Object.keys(commandes).forEach(type => {
+            document.getElementById(type + '-qty').textContent = '0';
         });
-
-        console.log('Statut de la réponse:', response.status);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const responseText = await response.text();
-        console.log('Réponse brute:', responseText);
-        
-        let result;
-        try {
-            result = JSON.parse(responseText);
-            console.log('Réponse parsée:', result);
-        } catch (parseError) {
-            console.error('Erreur de parsing JSON:', parseError);
-            throw new Error('Réponse du serveur invalide');
-        }
-        
-        if (result.success) {
-            afficherNotification('Commande enregistrée avec succès!', 'success');
-            // Réinitialiser le formulaire
-            document.getElementById('commandeForm').reset();
-            commandes = { berger: 0, club: 0, meat_free: 0, italien: 0, norvegien: 0 };
-            Object.keys(commandes).forEach(type => {
-                document.getElementById(type + '-qty').textContent = '0';
-            });
-        } else {
-            throw new Error(result.message || 'Erreur lors de l\'enregistrement');
-        }
         
     } catch (error) {
         console.error('=== ERREUR COMPLÈTE ===');
-        console.error('Type d\'erreur:', error.name);
         console.error('Message:', error.message);
-        console.error('Stack:', error.stack);
         
         let messageErreur = 'Erreur lors de l\'envoi de la commande. ';
         
-        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        if (error.message.includes('Timeout')) {
+            messageErreur += 'Délai d\'attente dépassé. Vérifiez votre connexion.';
+        } else if (error.message.includes('Erreur de réseau')) {
             messageErreur += 'Problème de connexion réseau.';
-        } else if (error.message.includes('Réponse du serveur invalide')) {
-            messageErreur += 'Le serveur a retourné une réponse invalide.';
         } else {
             messageErreur += 'Veuillez réessayer.';
         }
         
         afficherNotification(messageErreur, 'error');
         throw error;
+        
     } finally {
-        console.log('=== FIN ENVOI COMMANDE ===');
+        console.log('=== FIN ENVOI COMMANDE JSONP ===');
     }
 }
 
-        // Fonction pour afficher les notifications
-        function afficherNotification(message, type) {
-            const notification = document.getElementById('notification');
-            notification.innerHTML = `
-                <div class="alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show" role="alert">
-                    ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            `;
-            
-            // Auto-masquer après 5 secondes
-            setTimeout(() => {
-                const alert = notification.querySelector('.alert');
-                if (alert) {
-                    alert.remove();
-                }
-            }, 5000);
+// Fonction pour afficher les notifications
+function afficherNotification(message, type) {
+    const notification = document.getElementById('notification');
+    notification.innerHTML = `
+        <div class="alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    // Auto-masquer après 5 secondes
+    setTimeout(() => {
+        const alert = notification.querySelector('.alert');
+        if (alert) {
+            alert.remove();
         }
+    }, 5000);
+}
 
-        // Gestionnaire de soumission du formulaire
-        document.getElementById('commandeForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const prenom = document.getElementById('prenom').value.trim();
-            const commentaire = document.getElementById('commentaire').value.trim();
-            
-            // Vérifications
-            if (!prenom) {
-                afficherNotification('Veuillez entrer votre prénom.', 'error');
-                return;
-            }
+// Gestionnaire de soumission du formulaire
+document.getElementById('commandeForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const prenom = document.getElementById('prenom').value.trim();
+    const commentaire = document.getElementById('commentaire').value.trim();
+    
+    // Vérifications
+    if (!prenom) {
+        afficherNotification('Veuillez entrer votre prénom.', 'error');
+        return;
+    }
 
-            const totalSandwichs = Object.values(commandes).reduce((sum, qty) => sum + qty, 0);
-            if (totalSandwichs === 0) {
-                afficherNotification('Veuillez sélectionner au moins un sandwich.', 'error');
-                return;
-            }
+    const totalSandwichs = Object.values(commandes).reduce((sum, qty) => sum + qty, 0);
+    if (totalSandwichs === 0) {
+        afficherNotification('Veuillez sélectionner au moins un sandwich.', 'error');
+        return;
+    }
 
-            // Désactiver le bouton pendant l'envoi
-            const btnEnvoyer = document.getElementById('btnEnvoyer');
-            const textOriginal = btnEnvoyer.textContent;
-            btnEnvoyer.disabled = true;
-            btnEnvoyer.textContent = 'Envoi en cours...';
+    // Désactiver le bouton pendant l'envoi
+    const btnEnvoyer = document.getElementById('btnEnvoyer');
+    const textOriginal = btnEnvoyer.textContent;
+    btnEnvoyer.disabled = true;
+    btnEnvoyer.textContent = 'Envoi en cours...';
 
-            try {
-                await envoyerCommande({
-                    prenom,
-                    berger: commandes.berger,
-                    club: commandes.club,
-                    meat_free: commandes.meat_free,
-                    italien: commandes.italien,
-                    norvegien: commandes.norvegien,
-                    commentaire
-                });
-            } finally {
-                // Réactiver le bouton
-                btnEnvoyer.disabled = false;
-                btnEnvoyer.textContent = textOriginal;
-            }
+    try {
+        await envoyerCommande({
+            prenom,
+            berger: commandes.berger,
+            club: commandes.club,
+            meat_free: commandes.meat_free,
+            italien: commandes.italien,
+            norvegien: commandes.norvegien,
+            commentaire
         });
+    } finally {
+        // Réactiver le bouton
+        btnEnvoyer.disabled = false;
+        btnEnvoyer.textContent = textOriginal;
+    }
+});
     </script>
 </body>
 
