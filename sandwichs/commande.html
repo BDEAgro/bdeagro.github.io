@@ -323,78 +323,81 @@
             document.getElementById(type + '-qty').textContent = commandes[type];
         }
 
-        // Fonction pour appeler l'API avec debugging amélioré
-           async function envoyerCommande(data) {
-             console.log('=== DÉBUT ENVOI COMMANDE ===');
-             console.log('Données à envoyer:', data);
-             console.log('URL API:', API_URL);
+       // Fonction alternative pour éviter les requêtes preflight
+async function envoyerCommande(data) {
+    console.log('=== DÉBUT ENVOI COMMANDE ===');
+    console.log('Données à envoyer:', data);
     
-           try {
-              const requestBody = {
-                 action: 'enregistrerCommande',
-                 ...data
-               };
+    try {
+        // Créer un FormData pour éviter les requêtes preflight OPTIONS
+        const formData = new FormData();
+        const requestData = {
+            action: 'enregistrerCommande',
+            ...data
+        };
         
-             console.log('Corps de la requête:', JSON.stringify(requestBody, null, 2));
+        formData.append('data', JSON.stringify(requestData));
         
-             const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: {
-                   'Content-Type': 'application/json',
-               },
-               body: JSON.stringify(requestBody)
-             });
+        console.log('Envoi vers:', API_URL);
+        
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            body: formData, // Utiliser FormData au lieu de JSON
+            mode: 'cors'
+        });
 
-             console.log('Statut de la réponse:', response.status);
-             console.log('Headers de la réponse:', response.headers);
+        console.log('Statut de la réponse:', response.status);
         
-           // Lire la réponse en tant que texte d'abord pour voir ce qui est retourné
-            const responseText = await response.text();
-            console.log('Réponse brute:', responseText);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         
-            let result;
-            try {
-               result = JSON.parse(responseText);
-               console.log('Réponse parsée:', result);
-           } catch (parseError) {
-               console.error('Erreur de parsing JSON:', parseError);
-               throw new Error('Réponse du serveur invalide');
-           }
+        const responseText = await response.text();
+        console.log('Réponse brute:', responseText);
         
-            if (result.success) {
-               afficherNotification('Commande enregistrée avec succès!', 'success');
-               // Réinitialiser le formulaire
-                document.getElementById('commandeForm').reset();
-                commandes = { berger: 0, club: 0, meat_free: 0, italien: 0, norvegien: 0 };
-                Object.keys(commandes).forEach(type => {
+        let result;
+        try {
+            result = JSON.parse(responseText);
+            console.log('Réponse parsée:', result);
+        } catch (parseError) {
+            console.error('Erreur de parsing JSON:', parseError);
+            throw new Error('Réponse du serveur invalide');
+        }
+        
+        if (result.success) {
+            afficherNotification('Commande enregistrée avec succès!', 'success');
+            // Réinitialiser le formulaire
+            document.getElementById('commandeForm').reset();
+            commandes = { berger: 0, club: 0, meat_free: 0, italien: 0, norvegien: 0 };
+            Object.keys(commandes).forEach(type => {
                 document.getElementById(type + '-qty').textContent = '0';
-               });
-            } else {
-                console.error('Erreur API:', result.message);
-               throw new Error(result.message || 'Erreur lors de l\'enregistrement');
-            }
-            } catch (error) {
-               console.error('=== ERREUR COMPLÈTE ===');
-               console.error('Type d\'erreur:', error.name);
-               console.error('Message:', error.message);
-               console.error('Stack:', error.stack);
+            });
+        } else {
+            throw new Error(result.message || 'Erreur lors de l\'enregistrement');
+        }
         
-               let messageErreur = 'Erreur lors de l\'envoi de la commande. ';
+    } catch (error) {
+        console.error('=== ERREUR COMPLÈTE ===');
+        console.error('Type d\'erreur:', error.name);
+        console.error('Message:', error.message);
+        console.error('Stack:', error.stack);
         
-             if (error.name === 'TypeError' && error.message.includes('fetch')) {
-                 messageErreur += 'Problème de connexion réseau. Vérifiez votre connexion internet.';
-                } else if (error.message.includes('Réponse du serveur invalide')) {
-                   messageErreur += 'Le serveur a retourné une réponse invalide.';
-                } else {
-                     messageErreur += 'Veuillez réessayer. Si le problème persiste, contactez le support.';
-                }  
+        let messageErreur = 'Erreur lors de l\'envoi de la commande. ';
         
-             afficherNotification(messageErreur, 'error');
-            throw error;
-            } finally {
-              console.log('=== FIN ENVOI COMMANDE ===');
-          }
-         }
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            messageErreur += 'Problème de connexion réseau.';
+        } else if (error.message.includes('Réponse du serveur invalide')) {
+            messageErreur += 'Le serveur a retourné une réponse invalide.';
+        } else {
+            messageErreur += 'Veuillez réessayer.';
+        }
+        
+        afficherNotification(messageErreur, 'error');
+        throw error;
+    } finally {
+        console.log('=== FIN ENVOI COMMANDE ===');
+    }
+}
 
         // Fonction pour afficher les notifications
         function afficherNotification(message, type) {
