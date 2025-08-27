@@ -1,129 +1,165 @@
-// Configuration API
-const API_URL = "https://script.google.com/macros/s/AKfycbwZPAkz9kf6OOxaWv0xHBPNBKOcK5S1b0xF5LqZDRSkxCYeBgpiZJ8KtgPZgo5ZMrwj3g/exec";
+// Configuration API - MÊME URL que pour les commandes
+const API_URL = "https://script.google.com/macros/s/AKfycbwSDp_vaj1ZjATBibQHi-50OL380L_Rcz7sEFhyzbiuLUygq_TJm-zADHhvpoPFtPWRuQ/exec";
 
-// Fonction de connexion admin
-async function connexionAdmin(motDePasse) {
-    try {
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                action: 'verifierMotDePasse',
-                motDePasse: motDePasse
-            })
-        });
-
-        const result = await response.json();
+// Fonction JSONP pour la vérification du mot de passe
+function verifierMotDePasseJSONP(motDePasse) {
+    return new Promise((resolve, reject) => {
+        // Créer un nom de callback unique
+        const callbackName = 'loginCallback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         
-        if (result.success && result.token) {
-            // Sauvegarder le token dans le sessionStorage
-            sessionStorage.setItem('adminToken', result.token);
-            // Rediriger vers le dashboard
-            window.location.href = 'dashboard.html';
+        // Créer la fonction callback globale
+        window[callbackName] = function(response) {
+            // Nettoyer
+            document.head.removeChild(script);
+            delete window[callbackName];
+            
+            if (response.success) {
+                resolve(response);
+            } else {
+                reject(new Error(response.message || 'Erreur de connexion'));
+            }
+        };
+        
+        // Créer l'URL avec les paramètres
+        const params = new URLSearchParams({
+            action: 'verifierMotDePasse',
+            callback: callbackName,
+            motDePasse: motDePasse
+        });
+        
+        const url = `${API_URL}?${params.toString()}`;
+        console.log('URL de connexion:', url);
+        
+        // Créer et ajouter le script
+        const script = document.createElement('script');
+        script.src = url;
+        script.onerror = function() {
+            document.head.removeChild(script);
+            delete window[callbackName];
+            reject(new Error('Erreur de réseau'));
+        };
+        
+        document.head.appendChild(script);
+        
+        // Timeout de sécurité
+        setTimeout(() => {
+            if (window[callbackName]) {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                reject(new Error('Délai d\'attente dépassé'));
+            }
+        }, 10000);
+    });
+}
+
+// Fonction pour afficher les messages d'erreur
+function afficherMessage(message, type = 'error') {
+    const msgDiv = document.getElementById('msg');
+    msgDiv.textContent = message;
+    msgDiv.className = type === 'error' ? 'error-message' : 'success-message';
+}
+
+// Fonction pour sauvegarder le token (dans le sessionStorage du navigateur)
+function sauvegarderToken(token) {
+    sessionStorage.setItem('adminToken', token);
+    sessionStorage.setItem('adminTokenTime', Date.now().toString());
+}
+
+// Fonction pour vérifier si l'utilisateur est déjà connecté
+function verifierConnexionExistante() {
+    const token = sessionStorage.getItem('adminToken');
+    const tokenTime = sessionStorage.getItem('adminTokenTime');
+    
+    if (token && tokenTime) {
+        // Vérifier si le token n'est pas trop vieux (1 heure = 3600000ms)
+        const maintenant = Date.now();
+        const tempsEcoule = maintenant - parseInt(tokenTime);
+        
+        if (tempsEcoule < 3600000) { // 1 heure
+            // Rediriger vers la page admin
+            window.location.href = 'admin.html';
             return true;
         } else {
-            throw new Error(result.message || 'Mot de passe incorrect');
+            // Token expiré, le supprimer
+            sessionStorage.removeItem('adminToken');
+            sessionStorage.removeItem('adminTokenTime');
         }
+    }
+    return false;
+}
+
+// Gestionnaire de soumission du formulaire
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const motDePasse = document.getElementById('mdp').value.trim();
+    const btnConnexion = document.getElementById('btnConnexion');
+    const msgDiv = document.getElementById('msg');
+    
+    // Vérifications
+    if (!motDePasse) {
+        afficherMessage('Veuillez entrer le mot de passe.');
+        return;
+    }
+    
+    // Désactiver le bouton pendant la vérification
+    const textOriginal = btnConnexion.textContent;
+    btnConnexion.disabled = true;
+    btnConnexion.textContent = 'Vérification...';
+    msgDiv.textContent = '';
+    
+    try {
+        console.log('Tentative de connexion...');
+        const result = await verifierMotDePasseJSONP(motDePasse);
+        
+        console.log('Connexion réussie:', result);
+        
+        // Sauvegarder le token
+        sauvegarderToken(result.token);
+        
+        // Afficher le succès brièvement
+        afficherMessage('Connexion réussie ! Redirection...', 'success');
+        
+        // Rediriger après un court délai
+        setTimeout(() => {
+            window.location.href = 'admin.html';
+        }, 1000);
+        
     } catch (error) {
         console.error('Erreur de connexion:', error);
-        afficherErreur('Mot de passe incorrect ou erreur de connexion');
-        return false;
-    }
-}
-
-// Fonction pour afficher les erreurs
-function afficherErreur(message) {
-    const msgDiv = document.getElementById('msg');
-    if (msgDiv) {
-        msgDiv.textContent = message;
-        msgDiv.style.color = 'red';
-    }
-}
-
-// Fonction pour masquer les erreurs
-function masquerErreur() {
-    const msgDiv = document.getElementById('msg');
-    if (msgDiv) {
-        msgDiv.textContent = '';
-    }
-}
-
-// Initialisation quand le DOM est prêt
-document.addEventListener('DOMContentLoaded', function() {
-    // Vérifier si déjà connecté
-    const token = sessionStorage.getItem('adminToken');
-    if (token) {
-        // Vérifier si le token est encore valide
-        verifierToken(token).then(valide => {
-            if (valide) {
-                window.location.href = 'dashboard.html';
-            }
-        });
-    }
-
-    // Gestionnaire du formulaire de connexion
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-        loginForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const motDePasse = document.getElementById('mdp').value.trim();
-            
-            if (!motDePasse) {
-                afficherErreur('Veuillez saisir un mot de passe');
-                return;
-            }
-
-            // Masquer les erreurs précédentes
-            masquerErreur();
-            
-            // Désactiver le bouton pendant la vérification
-            const btnConnexion = document.getElementById('btnConnexion');
-            const textOriginal = btnConnexion.textContent;
-            btnConnexion.disabled = true;
-            btnConnexion.textContent = 'Connexion...';
-
-            try {
-                await connexionAdmin(motDePasse);
-            } finally {
-                // Réactiver le bouton
-                btnConnexion.disabled = false;
-                btnConnexion.textContent = textOriginal;
-            }
-        });
-    }
-
-    // Gestionnaire pour la touche Entrée dans le champ mot de passe
-    const mdpInput = document.getElementById('mdp');
-    if (mdpInput) {
-        mdpInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                document.getElementById('btnConnexion').click();
-            }
-        });
+        
+        let messageErreur;
+        if (error.message.includes('Mot de passe incorrect')) {
+            messageErreur = 'Mot de passe incorrect.';
+        } else if (error.message.includes('Délai d\'attente')) {
+            messageErreur = 'Délai d\'attente dépassé. Vérifiez votre connexion.';
+        } else if (error.message.includes('Erreur de réseau')) {
+            messageErreur = 'Problème de connexion réseau.';
+        } else {
+            messageErreur = 'Erreur de connexion. Veuillez réessayer.';
+        }
+        
+        afficherMessage(messageErreur);
+        
+    } finally {
+        // Réactiver le bouton
+        btnConnexion.disabled = false;
+        btnConnexion.textContent = textOriginal;
     }
 });
 
-// Fonction pour vérifier si un token est valide
-async function verifierToken(token) {
-    try {
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                action: 'verifierToken',
-                token: token
-            })
-        });
+// Vérifier la connexion existante au chargement de la page
+document.addEventListener('DOMContentLoaded', function() {
+    verifierConnexionExistante();
+});
 
-        const result = await response.json();
-        return result.success && result.valide;
-    } catch (error) {
-        console.error('Erreur vérification token:', error);
-        return false;
+// Style pour les messages de succès
+const style = document.createElement('style');
+style.textContent = `
+    .success-message {
+        color: #28a745;
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
     }
-}
+`;
+document.head.appendChild(style);
