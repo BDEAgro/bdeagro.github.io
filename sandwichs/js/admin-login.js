@@ -77,7 +77,7 @@ function verifierConnexionExistante() {
         
         if (tempsEcoule < 3600000) { // 1 heure
             // Rediriger vers la page admin
-            window.location.href = 'admin.html';
+            window.location.href = '../admin-dashboard.html';
             return true;
         } else {
             // Token expiré, le supprimer
