@@ -376,7 +376,7 @@ function envoyerCommandeJSONP(data) {
                 delete window[callbackName];
                 reject(new Error('Timeout'));
             }
-        }, 10000);
+        }, 2000);
     });
 }
 
