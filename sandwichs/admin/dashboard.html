@@ -286,382 +286,404 @@
     </script>
     
     <script>
-        // Configuration API
-        const API_URL = "https://script.google.com/macros/s/AKfycbwSDp_vaj1ZjATBibQHi-50OL380L_Rcz7sEFhyzbiuLUygq_TJm-zADHhvpoPFtPWRuQ/exec";
+// Configuration API
+const API_URL = "https://script.google.com/macros/s/AKfycbwSDp_vaj1ZjATBibQHi-50OL380L_Rcz7sEFhyzbiuLUygq_TJm-zADHhvpoPFtPWRuQ/exec";
 
-        // Variables globales
-        let currentToken = null;
-        let autoRefreshInterval = null;
-        let useJsonp = true; // Forcer JSONP dès le départ
-        let lastRequestTime = 0;
-        const MIN_REQUEST_INTERVAL = 2000; // Minimum 2 secondes entre les requêtes
+// Variables globales
+let currentToken = null;
+let autoRefreshInterval = null;
+let isRequesting = false; // Pour éviter les requêtes multiples
 
-        // Fonction JSONP pour contourner CORS
-        function makeJsonpRequest(url, params) {
-            return new Promise((resolve, reject) => {
-                // Créer un nom de callback unique
-                const callbackName = 'jsonpCallback_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-                
-                // Créer l'URL avec les paramètres
-                const queryParams = new URLSearchParams({
-                    ...params,
-                    callback: callbackName
-                });
-                const fullUrl = `${url}?${queryParams.toString()}`;
-                
-                // Créer la fonction callback globale
-                window[callbackName] = function(data) {
-                    // Nettoyer
-                    document.head.removeChild(script);
-                    delete window[callbackName];
-                    resolve(data);
-                };
-                
-                // Créer et insérer le script
-                const script = document.createElement('script');
-                script.src = fullUrl;
-                script.onerror = function() {
-                    document.head.removeChild(script);
-                    delete window[callbackName];
-                    reject(new Error('JSONP request failed'));
-                };
-                
-                document.head.appendChild(script);
-                
-                // Timeout après 10 secondes
-                setTimeout(() => {
-                    if (window[callbackName]) {
-                        document.head.removeChild(script);
-                        delete window[callbackName];
-                        reject(new Error('JSONP request timeout'));
-                    }
-                }, 10000);
-            });
+// Fonction pour faire des requêtes POST JSON
+async function makeJsonRequest(action, data = {}) {
+    const payload = {
+        action: action,
+        token: currentToken,
+        ...data
+    };
+
+    console.log('Envoi requête:', action);
+
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            mode: 'cors',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        // Fonction GET standard avec paramètres URL
-        async function makeGetRequest(params) {
-            const queryParams = new URLSearchParams(params);
-            const fullUrl = `${API_URL}?${queryParams.toString()}`;
-            
-            const response = await fetch(fullUrl, {
-                method: 'GET',
-                mode: 'cors',
-            });
+        const result = await response.json();
+        console.log('Réponse reçue pour', action, ':', result.success ? 'SUCCESS' : 'ERROR');
+        
+        return result;
+    } catch (error) {
+        console.error('Erreur requête', action, ':', error);
+        throw error;
+    }
+}
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+// Fonction pour vérifier si le token est valide
+async function verifierToken() {
+    try {
+        const result = await makeJsonRequest('verifierToken');
+        return result.success && result.valide;
+    } catch (error) {
+        console.error('Erreur vérification token:', error);
+        return false;
+    }
+}
 
-            return await response.json();
+// Fonction pour récupérer les commandes
+async function getCommandes() {
+    try {
+        if (isRequesting) {
+            console.log('Requête déjà en cours, ignore...');
+            return {};
         }
-
-        // Fonction pour faire une requête avec limitation de débit
-        async function makeRequest(params) {
-            // Limitation de débit pour éviter 429
-            const now = Date.now();
-            if (now - lastRequestTime < MIN_REQUEST_INTERVAL) {
-                await new Promise(resolve => setTimeout(resolve, MIN_REQUEST_INTERVAL - (now - lastRequestTime)));
-            }
-            lastRequestTime = Date.now();
-
-            try {
-                // Utiliser JSONP par défaut pour Google Apps Script
-                return await makeJsonpRequest(API_URL, params);
-            } catch (error) {
-                console.error('JSONP failed:', error);
-                
-                // En cas d'échec, essayer GET classique (rare chance de succès mais on tente)
-                try {
-                    return await makeGetRequest(params);
-                } catch (getError) {
-                    console.error('GET also failed:', getError);
-                    throw new Error('Impossible de contacter le serveur. Essayez de rafraîchir la page.');
-                }
-            }
-        }
-
-        // Fonction pour récupérer les commandes du jour
-        async function getCommandes() {
-            try {
-                const result = await makeRequest({
-                    action: 'getCommandes',
-                    token: currentToken
-                });
-                
-                if (result.success) {
-                    return result.data;
-                } else {
-                    throw new Error(result.message || 'Erreur lors de la récupération des commandes');
-                }
-            } catch (error) {
-                console.error('Erreur récupération commandes:', error);
-                afficherNotification('Erreur lors de la récupération des commandes: ' + error.message, 'error');
+        
+        isRequesting = true;
+        const result = await makeJsonRequest('getCommandes');
+        
+        if (result.success) {
+            return result.data || {};
+        } else {
+            if (result.message && result.message.includes('Token invalide')) {
+                console.log('Token invalide, redirection...');
+                redirectToLogin();
                 return {};
             }
+            throw new Error(result.message || 'Erreur lors de la récupération des commandes');
         }
-
-        // Fonction pour remplir les tableaux avec les données
-        function remplirTableaux(data) {
-            remplirTableauCommandes(data);
-            remplirTableauResume(data);
-            mettreAJourStatistiques(data);
-            mettreAJourDerniereActualisation();
+    } catch (error) {
+        console.error('Erreur récupération commandes:', error);
+        
+        // Si erreur d'authentification, rediriger
+        if (error.message && (error.message.includes('Token') || 
+            error.message.includes('401') || error.message.includes('403'))) {
+            redirectToLogin();
+            return {};
         }
+        
+        afficherNotification('Erreur lors de la récupération des commandes: ' + error.message, 'error');
+        return {};
+    } finally {
+        isRequesting = false;
+    }
+}
 
-        // Fonction pour remplir le tableau des commandes par prénom
-        function remplirTableauCommandes(data) {
-            const tbody = document.querySelector('#tableauCommandes tbody');
-            if (!tbody) return;
-            
-            tbody.innerHTML = '';
+// Fonction pour rediriger vers la page de connexion
+function redirectToLogin() {
+    console.log('Redirection vers login...');
+    sessionStorage.removeItem('adminToken');
+    sessionStorage.removeItem('adminTokenTime');
+    
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+    }
+    
+    window.location.href = 'login.html';
+}
 
-            for (let prenom in data) {
-                const tr = document.createElement('tr');
+// Fonction pour remplir les tableaux avec les données
+function remplirTableaux(data) {
+    try {
+        remplirTableauCommandes(data);
+        remplirTableauResume(data);
+        mettreAJourStatistiques(data);
+        mettreAJourDerniereActualisation();
+    } catch (error) {
+        console.error('Erreur lors du remplissage des tableaux:', error);
+        afficherNotification('Erreur lors de l\'affichage des données', 'error');
+    }
+}
 
-                // Colonne prénom
-                const tdPrenom = document.createElement('td');
-                tdPrenom.textContent = prenom;
-                tdPrenom.style.fontWeight = 'bold';
-                tr.appendChild(tdPrenom);
+// Fonction pour remplir le tableau des commandes par prénom
+function remplirTableauCommandes(data) {
+    const tbody = document.querySelector('#tableauCommandes tbody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
 
-                // Colonne sandwichs
-                const tdSandwichs = document.createElement('td');
-                const sandwichs = data[prenom].sandwichs || {};
-                const sandwichsText = Object.entries(sandwichs)
-                    .filter(([type, nb]) => nb > 0)
-                    .map(([type, nb]) => `${type} (${nb})`)
-                    .join(", ");
-                tdSandwichs.textContent = sandwichsText || 'Aucun sandwich';
-                tr.appendChild(tdSandwichs);
+    const prenoms = Object.keys(data).sort();
+    
+    for (let prenom of prenoms) {
+        const tr = document.createElement('tr');
 
-                // Colonne commentaires
-                const tdCommentaire = document.createElement('td');
-                const commentaires = (data[prenom].commentaire || [])
-                    .filter(comm => comm.trim() !== "")
-                    .join(" | ");
-                tdCommentaire.textContent = commentaires || '-';
-                tr.appendChild(tdCommentaire);
+        // Colonne prénom
+        const tdPrenom = document.createElement('td');
+        tdPrenom.textContent = prenom;
+        tdPrenom.style.fontWeight = 'bold';
+        tr.appendChild(tdPrenom);
 
-                tbody.appendChild(tr);
-            }
+        // Colonne sandwichs
+        const tdSandwichs = document.createElement('td');
+        const sandwichs = data[prenom].sandwichs || {};
+        const sandwichsText = Object.entries(sandwichs)
+            .filter(([type, nb]) => nb > 0)
+            .map(([type, nb]) => `${type} (${nb})`)
+            .join(", ");
+        tdSandwichs.textContent = sandwichsText || 'Aucun sandwich';
+        tr.appendChild(tdSandwichs);
 
-            // Afficher un message si aucune commande
-            if (Object.keys(data).length === 0) {
-                const tr = document.createElement('tr');
-                const td = document.createElement('td');
-                td.colSpan = 3;
-                td.textContent = 'Aucune commande pour aujourd\'hui';
-                td.style.textAlign = 'center';
-                td.style.fontStyle = 'italic';
-                tr.appendChild(td);
-                tbody.appendChild(tr);
-            }
+        // Colonne commentaires
+        const tdCommentaire = document.createElement('td');
+        const commentaires = (data[prenom].commentaire || [])
+            .filter(comm => comm && comm.trim() !== "")
+            .join(" | ");
+        tdCommentaire.textContent = commentaires || '-';
+        tr.appendChild(tdCommentaire);
+
+        tbody.appendChild(tr);
+    }
+
+    // Afficher un message si aucune commande
+    if (prenoms.length === 0) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 3;
+        td.textContent = 'Aucune commande pour aujourd\'hui';
+        td.style.textAlign = 'center';
+        td.style.fontStyle = 'italic';
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+    }
+}
+
+// Fonction pour remplir le tableau de résumé
+function remplirTableauResume(data) {
+    const resumeBody = document.querySelector('#resumeCommandes tbody');
+    if (!resumeBody) return;
+    
+    resumeBody.innerHTML = '';
+    const totaux = {};
+
+    // Calculer les totaux par type de sandwich
+    for (let prenom in data) {
+        const sandwichs = data[prenom].sandwichs || {};
+        for (let type in sandwichs) {
+            const nb = Number(sandwichs[type]) || 0;
+            totaux[type] = (totaux[type] || 0) + nb;
         }
+    }
 
-        // Fonction pour remplir le tableau de résumé
-        function remplirTableauResume(data) {
-            const resumeBody = document.querySelector('#resumeCommandes tbody');
-            if (!resumeBody) return;
-            
-            resumeBody.innerHTML = '';
-            const totaux = {};
+    // Types de sandwichs avec noms d'affichage
+    const typesSandwichs = {
+        'berger': 'Berger Apicole',
+        'club': 'Club',
+        'meat_free': 'Meat Free',
+        'italien': 'Italien',
+        'norvegien': 'Norvégien'
+    };
 
-            // Calculer les totaux par type de sandwich
-            for (let prenom in data) {
-                const sandwichs = data[prenom].sandwichs || {};
-                for (let type in sandwichs) {
-                    const nb = Number(sandwichs[type]) || 0;
-                    totaux[type] = (totaux[type] || 0) + nb;
-                }
-            }
+    // Afficher tous les types
+    Object.entries(typesSandwichs).forEach(([type, nom]) => {
+        const tr = document.createElement('tr');
+        
+        const tdType = document.createElement('td');
+        tdType.textContent = nom;
+        tr.appendChild(tdType);
 
-            // Types de sandwichs avec noms d'affichage
-            const typesSandwichs = {
-                'berger': 'Berger Apicole',
-                'club': 'Club',
-                'meat_free': 'Meat Free',
-                'italien': 'Italien',
-                'norvegien': 'Norvégien'
-            };
-
-            // Afficher tous les types même si quantité = 0
-            Object.entries(typesSandwichs).forEach(([type, nom]) => {
-                const tr = document.createElement('tr');
-                
-                const tdType = document.createElement('td');
-                tdType.textContent = nom;
-                tr.appendChild(tdType);
-
-                const tdTotal = document.createElement('td');
-                const total = totaux[type] || 0;
-                tdTotal.textContent = total;
-                tdTotal.style.fontWeight = 'bold';
-                
-                // Colorer en vert si > 0
-                if (total > 0) {
-                    tdTotal.style.color = '#28a745';
-                }
-                
-                tr.appendChild(tdTotal);
-                resumeBody.appendChild(tr);
-            });
+        const tdTotal = document.createElement('td');
+        const total = totaux[type] || 0;
+        tdTotal.textContent = total;
+        tdTotal.style.fontWeight = 'bold';
+        
+        if (total > 0) {
+            tdTotal.style.color = '#28a745';
         }
+        
+        tr.appendChild(tdTotal);
+        resumeBody.appendChild(tr);
+    });
+}
 
-        // Fonction pour mettre à jour l'heure de dernière actualisation
-        function mettreAJourDerniereActualisation() {
-            const spanActualisation = document.getElementById('derniereActualisation');
-            if (spanActualisation) {
-                const maintenant = new Date();
-                spanActualisation.textContent = maintenant.toLocaleTimeString('fr-FR', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-            }
+// Fonction pour mettre à jour les statistiques
+function mettreAJourStatistiques(data) {
+    const totalCommandes = Object.keys(data).length;
+    let totalSandwichs = 0;
+    const totauxParType = {};
+
+    // Calculer les totaux
+    for (let prenom in data) {
+        const sandwichs = data[prenom].sandwichs || {};
+        for (let type in sandwichs) {
+            const nb = Number(sandwichs[type]) || 0;
+            totalSandwichs += nb;
+            totauxParType[type] = (totauxParType[type] || 0) + nb;
         }
+    }
 
-        // Fonction pour mettre à jour les statistiques
-        function mettreAJourStatistiques(data) {
-            const totalCommandes = Object.keys(data).length;
-            let totalSandwichs = 0;
-            const totauxParType = {};
+    // Trouver le sandwich le plus populaire
+    let sandwichPopulaire = '-';
+    let maxQuantite = 0;
+    const nomsAffichage = {
+        'berger': 'Berger',
+        'club': 'Club',
+        'meat_free': 'Meat Free',
+        'italien': 'Italien',
+        'norvegien': 'Norvégien'
+    };
 
-            // Calculer les totaux
-            for (let prenom in data) {
-                const sandwichs = data[prenom].sandwichs || {};
-                for (let type in sandwichs) {
-                    const nb = Number(sandwichs[type]) || 0;
-                    totalSandwichs += nb;
-                    totauxParType[type] = (totauxParType[type] || 0) + nb;
-                }
-            }
-
-            // Trouver le sandwich le plus populaire
-            let sandwichPopulaire = '-';
-            let maxQuantite = 0;
-            const nomsAffichage = {
-                'berger': 'Berger',
-                'club': 'Club',
-                'meat_free': 'Meat Free',
-                'italien': 'Italien',
-                'norvegien': 'Norvégien'
-            };
-
-            for (let type in totauxParType) {
-                if (totauxParType[type] > maxQuantite) {
-                    maxQuantite = totauxParType[type];
-                    sandwichPopulaire = nomsAffichage[type] || type;
-                }
-            }
-
-            // Mettre à jour l'affichage
-            document.getElementById('totalCommandes').textContent = totalCommandes;
-            document.getElementById('totalSandwichs').textContent = totalSandwichs;
-            document.getElementById('sandwichPopulaire').textContent = sandwichPopulaire;
+    for (let type in totauxParType) {
+        if (totauxParType[type] > maxQuantite) {
+            maxQuantite = totauxParType[type];
+            sandwichPopulaire = nomsAffichage[type] || type;
         }
+    }
 
-        // Fonction pour actualiser les données
-        async function actualiserDonnees() {
-            const data = await getCommandes();
-            remplirTableaux(data);
-        }
+    // Mettre à jour l'affichage
+    const elemTotalCommandes = document.getElementById('totalCommandes');
+    const elemTotalSandwichs = document.getElementById('totalSandwichs');
+    const elemSandwichPopulaire = document.getElementById('sandwichPopulaire');
+    
+    if (elemTotalCommandes) elemTotalCommandes.textContent = totalCommandes;
+    if (elemTotalSandwichs) elemTotalSandwichs.textContent = totalSandwichs;
+    if (elemSandwichPopulaire) elemSandwichPopulaire.textContent = sandwichPopulaire;
+}
 
-        // Fonction de déconnexion
-        async function deconnexion() {
-            try {
-                // Invalider le token côté serveur
-                await makeRequest({
-                    action: 'invaliderToken',
-                    token: currentToken
-                });
-            } catch (error) {
-                console.error('Erreur déconnexion:', error);
-            }
-
-            // Nettoyer côté client
-            sessionStorage.removeItem('adminToken');
-            sessionStorage.removeItem('adminTokenTime');
-            if (autoRefreshInterval) {
-                clearInterval(autoRefreshInterval);
-            }
-            
-            // Rediriger vers la page de connexion
-            window.location.href = 'login.html';
-        }
-
-        // Fonction pour afficher les notifications
-        function afficherNotification(message, type) {
-            const notification = document.getElementById('notification');
-            if (notification) {
-                const alertClass = type === 'success' ? 'success' : 
-                                 type === 'warning' ? 'warning' : 'danger';
-                
-                notification.innerHTML = `
-                    <div class="alert alert-${alertClass} alert-dismissible fade show" role="alert">
-                        ${message}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                `;
-                
-                // Auto-masquer après 5 secondes
-                setTimeout(() => {
-                    const alert = notification.querySelector('.alert');
-                    if (alert) {
-                        alert.remove();
-                    }
-                }, 5000);
-            }
-        }
-
-
-
-        // Initialisation quand le DOM est prêt
-        document.addEventListener('DOMContentLoaded', async function() {
-            // Vérifier l'authentification
-            currentToken = sessionStorage.getItem('adminToken');
-            
-            if (!currentToken) {
-                window.location.href = 'login.html';
-                return;
-            }
-
-            // Vérifier si le token est encore valide
-            try {
-                const result = await makeRequest({
-                    action: 'verifierToken',
-                    token: currentToken
-                });
-                
-                if (!result.success || !result.valide) {
-                    sessionStorage.removeItem('adminToken');
-                    sessionStorage.removeItem('adminTokenTime');
-                    window.location.href = 'login.html';
-                    return;
-                }
-            } catch (error) {
-                console.error('Erreur vérification token:', error);
-                afficherNotification('Impossible de vérifier l\'authentification. Reconnexion...', 'warning');
-                window.location.href = 'login.html';
-                return;
-            }
-
-            // Charger les données initiales
-            await actualiserDonnees();
-
-            // Configurer les gestionnaires d'événements
-            const btnDeconnexion = document.getElementById('logoutBtn');
-            if (btnDeconnexion) {
-                btnDeconnexion.addEventListener('click', deconnexion);
-            }
-
-            const btnActualiser = document.getElementById('refreshBtn');
-            if (btnActualiser) {
-                btnActualiser.addEventListener('click', actualiserDonnees);
-            }
-
-            // Actualisation automatique toutes les 45 secondes (réduit pour éviter 429)
-            autoRefreshInterval = setInterval(actualiserDonnees, 45000);
+// Fonction pour mettre à jour l'heure de dernière actualisation
+function mettreAJourDerniereActualisation() {
+    const spanActualisation = document.getElementById('derniereActualisation');
+    if (spanActualisation) {
+        const maintenant = new Date();
+        spanActualisation.textContent = maintenant.toLocaleTimeString('fr-FR', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
         });
+    }
+}
+
+// Fonction pour actualiser les données
+async function actualiserDonnees() {
+    console.log('Actualisation des données...');
+    
+    const btnActualiser = document.getElementById('refreshBtn');
+    if (btnActualiser) {
+        btnActualiser.disabled = true;
+        btnActualiser.textContent = 'Actualisation...';
+    }
+    
+    try {
+        const data = await getCommandes();
+        remplirTableaux(data);
+        afficherNotification('Données actualisées avec succès', 'success');
+    } catch (error) {
+        console.error('Erreur actualisation:', error);
+    } finally {
+        if (btnActualiser) {
+            btnActualiser.disabled = false;
+            btnActualiser.textContent = 'Actualiser';
+        }
+    }
+}
+
+// Fonction de déconnexion
+async function deconnexion() {
+    console.log('Déconnexion...');
+    
+    try {
+        // Tenter d'invalider le token côté serveur
+        await makeJsonRequest('invaliderToken');
+    } catch (error) {
+        console.error('Erreur lors de l\'invalidation du token:', error);
+        // On continue quand même la déconnexion
+    }
+
+    // Nettoyer côté client
+    sessionStorage.removeItem('adminToken');
+    sessionStorage.removeItem('adminTokenTime');
+    
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+    }
+    
+    // Rediriger vers la page de connexion
+    window.location.href = 'login.html';
+}
+
+// Fonction pour afficher les notifications
+function afficherNotification(message, type) {
+    const notification = document.getElementById('notification');
+    if (notification) {
+        const alertClass = type === 'success' ? 'success' : 
+                         type === 'warning' ? 'warning' : 'danger';
+        
+        notification.innerHTML = `
+            <div class="alert alert-${alertClass} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        
+        // Auto-masquer après 5 secondes
+        setTimeout(() => {
+            const alert = notification.querySelector('.alert');
+            if (alert) {
+                alert.remove();
+            }
+        }, 5000);
+    }
+}
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('Dashboard chargé');
+    
+    // Récupérer le token
+    currentToken = sessionStorage.getItem('adminToken');
+    
+    if (!currentToken) {
+        console.log('Pas de token, redirection...');
+        redirectToLogin();
+        return;
+    }
+
+    // Vérifier si le token est encore valide
+    try {
+        const tokenValide = await verifierToken();
+        
+        if (!tokenValide) {
+            console.log('Token invalide, redirection...');
+            redirectToLogin();
+            return;
+        }
+        
+        console.log('Token valide, chargement des données...');
+    } catch (error) {
+        console.error('Erreur vérification token:', error);
+        redirectToLogin();
+        return;
+    }
+
+    // Charger les données initiales
+    await actualiserDonnees();
+
+    // Configurer les gestionnaires d'événements
+    const btnDeconnexion = document.getElementById('logoutBtn');
+    if (btnDeconnexion) {
+        btnDeconnexion.addEventListener('click', deconnexion);
+    }
+
+    const btnActualiser = document.getElementById('refreshBtn');
+    if (btnActualiser) {
+        btnActualiser.addEventListener('click', actualiserDonnees);
+    }
+
+    // Actualisation automatique toutes les 60 secondes
+    autoRefreshInterval = setInterval(async () => {
+        console.log('Actualisation automatique...');
+        await actualiserDonnees();
+    }, 60000);
+
+    console.log('Dashboard initialisé avec succès');
+});
     </script>
 </body>
 
