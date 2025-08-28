@@ -120,6 +120,14 @@
             font-style: italic;
             padding: 2rem;
         }
+
+        .cors-warning {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            border: 1px solid #ffc107;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
     </style>
 </head>
 
@@ -146,6 +154,19 @@
 
     <!-- Main Content -->
     <div class="container">
+        <!-- Alerte CORS -->
+        <div class="cors-warning d-none" id="corsWarning">
+            <h5>⚠️ Problème de connexion détecté</h5>
+            <p class="mb-2">Si les données ne se chargent pas, voici les solutions disponibles :</p>
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-success btn-sm" id="tryGetBtn">📡 Essayer GET</button>
+                <button class="btn btn-warning btn-sm" id="tryJsonpBtn">🔄 Essayer JSONP</button>
+            </div>
+            <small class="text-muted d-block mt-2">
+                GET fonctionne mieux avec Google Apps Script. JSONP est le plan B.
+            </small>
+        </div>
+
         <!-- Statistiques rapides -->
         <div class="row mb-4">
             <div class="col-md-3">
@@ -265,28 +286,111 @@
     </script>
     
     <script>
-        // Configuration API - MÊME URL que dans le login
+        // Configuration API
         const API_URL = "https://script.google.com/macros/s/AKfycbwSDp_vaj1ZjATBibQHi-50OL380L_Rcz7sEFhyzbiuLUygq_TJm-zADHhvpoPFtPWRuQ/exec";
 
         // Variables globales
         let currentToken = null;
         let autoRefreshInterval = null;
+        let useJsonp = false;
+
+        // Fonction JSONP pour contourner CORS
+        function makeJsonpRequest(url, params) {
+            return new Promise((resolve, reject) => {
+                // Créer un nom de callback unique
+                const callbackName = 'jsonpCallback_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+                
+                // Créer l'URL avec les paramètres
+                const queryParams = new URLSearchParams({
+                    ...params,
+                    callback: callbackName
+                });
+                const fullUrl = `${url}?${queryParams.toString()}`;
+                
+                // Créer la fonction callback globale
+                window[callbackName] = function(data) {
+                    // Nettoyer
+                    document.head.removeChild(script);
+                    delete window[callbackName];
+                    resolve(data);
+                };
+                
+                // Créer et insérer le script
+                const script = document.createElement('script');
+                script.src = fullUrl;
+                script.onerror = function() {
+                    document.head.removeChild(script);
+                    delete window[callbackName];
+                    reject(new Error('JSONP request failed'));
+                };
+                
+                document.head.appendChild(script);
+                
+                // Timeout après 10 secondes
+                setTimeout(() => {
+                    if (window[callbackName]) {
+                        document.head.removeChild(script);
+                        delete window[callbackName];
+                        reject(new Error('JSONP request timeout'));
+                    }
+                }, 10000);
+            });
+        }
+
+        // Fonction GET standard avec paramètres URL
+        async function makeGetRequest(params) {
+            const queryParams = new URLSearchParams(params);
+            const fullUrl = `${API_URL}?${queryParams.toString()}`;
+            
+            const response = await fetch(fullUrl, {
+                method: 'GET',
+                mode: 'cors',
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        }
+
+        // Fonction pour faire une requête (GET, POST ou JSONP selon les besoins)
+        async function makeRequest(params) {
+            if (useJsonp) {
+                return await makeJsonpRequest(API_URL, params);
+            } else {
+                try {
+                    // Essayer d'abord avec GET (plus compatible avec Google Apps Script)
+                    return await makeGetRequest(params);
+                } catch (error) {
+                    console.log('GET failed, trying POST:', error.message);
+                    
+                    // Si GET échoue, essayer POST
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        mode: 'cors',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(params)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    return await response.json();
+                }
+            }
+        }
 
         // Fonction pour récupérer les commandes du jour
         async function getCommandes() {
             try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'getCommandes',
-                        token: currentToken
-                    })
+                const result = await makeRequest({
+                    action: 'getCommandes',
+                    token: currentToken
                 });
-
-                const result = await response.json();
                 
                 if (result.success) {
                     return result.data;
@@ -295,7 +399,15 @@
                 }
             } catch (error) {
                 console.error('Erreur récupération commandes:', error);
-                afficherNotification('Erreur lors de la récupération des commandes', 'error');
+                
+                // Si c'est une erreur CORS et qu'on n'utilise pas encore JSONP
+                if (!useJsonp && (error.message.includes('CORS') || error.message.includes('Failed to fetch'))) {
+                    document.getElementById('corsWarning').classList.remove('d-none');
+                    afficherNotification('Problème CORS détecté. Cliquez sur "Essayer avec JSONP" ci-dessus.', 'warning');
+                } else {
+                    afficherNotification('Erreur lors de la récupération des commandes: ' + error.message, 'error');
+                }
+                
                 return {};
             }
         }
@@ -469,15 +581,9 @@
         async function deconnexion() {
             try {
                 // Invalider le token côté serveur
-                await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'invaliderToken',
-                        token: currentToken
-                    })
+                await makeRequest({
+                    action: 'invaliderToken',
+                    token: currentToken
                 });
             } catch (error) {
                 console.error('Erreur déconnexion:', error);
@@ -498,8 +604,11 @@
         function afficherNotification(message, type) {
             const notification = document.getElementById('notification');
             if (notification) {
+                const alertClass = type === 'success' ? 'success' : 
+                                 type === 'warning' ? 'warning' : 'danger';
+                
                 notification.innerHTML = `
-                    <div class="alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show" role="alert">
+                    <div class="alert alert-${alertClass} alert-dismissible fade show" role="alert">
                         ${message}
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
@@ -515,6 +624,22 @@
             }
         }
 
+        // Fonction pour essayer JSONP
+        function essayerJsonp() {
+            useJsonp = true;
+            document.getElementById('corsWarning').classList.add('d-none');
+            afficherNotification('Passage en mode JSONP. Actualisation des données...', 'success');
+            actualiserDonnees();
+        }
+
+        // Fonction pour essayer les requêtes GET standard
+        function essayerGet() {
+            useJsonp = false;
+            document.getElementById('corsWarning').classList.add('d-none');
+            afficherNotification('Essai avec requêtes GET standard...', 'success');
+            actualiserDonnees();
+        }
+
         // Initialisation quand le DOM est prêt
         document.addEventListener('DOMContentLoaded', async function() {
             // Vérifier l'authentification
@@ -527,18 +652,10 @@
 
             // Vérifier si le token est encore valide
             try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'verifierToken',
-                        token: currentToken
-                    })
+                const result = await makeRequest({
+                    action: 'verifierToken',
+                    token: currentToken
                 });
-
-                const result = await response.json();
                 
                 if (!result.success || !result.valide) {
                     sessionStorage.removeItem('adminToken');
@@ -548,8 +665,14 @@
                 }
             } catch (error) {
                 console.error('Erreur vérification token:', error);
-                window.location.href = 'login.html';
-                return;
+                
+                // Si erreur CORS, proposer JSONP
+                if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
+                    document.getElementById('corsWarning').classList.remove('d-none');
+                } else {
+                    window.location.href = 'login.html';
+                    return;
+                }
             }
 
             // Charger les données initiales
@@ -564,6 +687,16 @@
             const btnActualiser = document.getElementById('refreshBtn');
             if (btnActualiser) {
                 btnActualiser.addEventListener('click', actualiserDonnees);
+            }
+
+            const btnJsonp = document.getElementById('tryJsonpBtn');
+            if (btnJsonp) {
+                btnJsonp.addEventListener('click', essayerJsonp);
+            }
+
+            const btnGet = document.getElementById('tryGetBtn');
+            if (btnGet) {
+                btnGet.addEventListener('click', essayerGet);
             }
 
             // Actualisation automatique toutes les 30 secondes
