@@ -292,26 +292,25 @@ const API_URL = "https://script.google.com/macros/s/AKfycbwSDp_vaj1ZjATBibQHi-50
 // Variables globales
 let currentToken = null;
 let autoRefreshInterval = null;
-let isRequesting = false; // Pour éviter les requêtes multiples
+let isRequesting = false;
 
-// Fonction pour faire des requêtes POST JSON
-async function makeJsonRequest(action, data = {}) {
-    const payload = {
+// Fonction pour faire des requêtes GET (évite totalement CORS)
+async function makeGetRequest(action, data = {}) {
+    const params = new URLSearchParams({
         action: action,
         token: currentToken,
-        ...data
-    };
-
-    console.log('Envoi requête:', action);
+        ...data,
+        _t: Date.now() // Cache buster
+    });
+    
+    const url = `${API_URL}?${params.toString()}`;
+    console.log('Requête GET:', action);
 
     try {
-        const response = await fetch(API_URL, {
-            method: 'POST',
+        const response = await fetch(url, {
+            method: 'GET',
             mode: 'cors',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload)
+            credentials: 'omit'
         });
 
         if (!response.ok) {
@@ -323,15 +322,63 @@ async function makeJsonRequest(action, data = {}) {
         
         return result;
     } catch (error) {
-        console.error('Erreur requête', action, ':', error);
+        console.error('Erreur requête GET', action, ':', error);
         throw error;
+    }
+}
+
+// Fonction de fallback avec script tag si fetch échoue
+async function makeScriptRequest(action, data = {}) {
+    return new Promise((resolve, reject) => {
+        const callbackName = 'callback_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+        
+        window[callbackName] = function(response) {
+            document.head.removeChild(script);
+            delete window[callbackName];
+            resolve(response);
+        };
+        
+        const params = new URLSearchParams({
+            action: action,
+            token: currentToken,
+            callback: callbackName,
+            ...data
+        });
+        
+        const script = document.createElement('script');
+        script.src = `${API_URL}?${params.toString()}`;
+        script.onerror = function() {
+            document.head.removeChild(script);
+            delete window[callbackName];
+            reject(new Error('Script request failed'));
+        };
+        
+        document.head.appendChild(script);
+        
+        setTimeout(() => {
+            if (window[callbackName]) {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                reject(new Error('Script request timeout'));
+            }
+        }, 10000);
+    });
+}
+
+// Fonction principale pour faire des requêtes
+async function makeRequest(action, data = {}) {
+    try {
+        return await makeGetRequest(action, data);
+    } catch (error) {
+        console.warn('GET failed, trying script fallback:', error);
+        return await makeScriptRequest(action, data);
     }
 }
 
 // Fonction pour vérifier si le token est valide
 async function verifierToken() {
     try {
-        const result = await makeJsonRequest('verifierToken');
+        const result = await makeRequest('verifierToken');
         return result.success && result.valide;
     } catch (error) {
         console.error('Erreur vérification token:', error);
@@ -348,7 +395,7 @@ async function getCommandes() {
         }
         
         isRequesting = true;
-        const result = await makeJsonRequest('getCommandes');
+        const result = await makeRequest('getCommandes');
         
         if (result.success) {
             return result.data || {};
@@ -385,6 +432,7 @@ function redirectToLogin() {
     
     if (autoRefreshInterval) {
         clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
     }
     
     window.location.href = 'login.html';
@@ -573,9 +621,10 @@ async function actualiserDonnees() {
     try {
         const data = await getCommandes();
         remplirTableaux(data);
-        afficherNotification('Données actualisées avec succès', 'success');
+        afficherNotification('Données actualisées', 'success');
     } catch (error) {
         console.error('Erreur actualisation:', error);
+        afficherNotification('Erreur lors de l\'actualisation', 'error');
     } finally {
         if (btnActualiser) {
             btnActualiser.disabled = false;
@@ -590,22 +639,13 @@ async function deconnexion() {
     
     try {
         // Tenter d'invalider le token côté serveur
-        await makeJsonRequest('invaliderToken');
+        await makeRequest('invaliderToken');
     } catch (error) {
         console.error('Erreur lors de l\'invalidation du token:', error);
         // On continue quand même la déconnexion
     }
 
-    // Nettoyer côté client
-    sessionStorage.removeItem('adminToken');
-    sessionStorage.removeItem('adminTokenTime');
-    
-    if (autoRefreshInterval) {
-        clearInterval(autoRefreshInterval);
-    }
-    
-    // Rediriger vers la page de connexion
-    window.location.href = 'login.html';
+    redirectToLogin();
 }
 
 // Fonction pour afficher les notifications
@@ -622,13 +662,15 @@ function afficherNotification(message, type) {
             </div>
         `;
         
-        // Auto-masquer après 5 secondes
-        setTimeout(() => {
-            const alert = notification.querySelector('.alert');
-            if (alert) {
-                alert.remove();
-            }
-        }, 5000);
+        // Auto-masquer après 5 secondes pour les succès
+        if (type === 'success') {
+            setTimeout(() => {
+                const alert = notification.querySelector('.alert');
+                if (alert) {
+                    alert.remove();
+                }
+            }, 5000);
+        }
     }
 }
 
@@ -646,6 +688,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     // Vérifier si le token est encore valide
+    console.log('Vérification du token...');
     try {
         const tokenValide = await verifierToken();
         
@@ -658,7 +701,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         console.log('Token valide, chargement des données...');
     } catch (error) {
         console.error('Erreur vérification token:', error);
-        redirectToLogin();
+        afficherNotification('Erreur de connexion, reconnexion...', 'warning');
+        setTimeout(() => redirectToLogin(), 2000);
         return;
     }
 
@@ -676,11 +720,15 @@ document.addEventListener('DOMContentLoaded', async function() {
         btnActualiser.addEventListener('click', actualiserDonnees);
     }
 
-    // Actualisation automatique toutes les 60 secondes
+    // Actualisation automatique toutes les 90 secondes (plus espacé pour éviter les erreurs)
     autoRefreshInterval = setInterval(async () => {
         console.log('Actualisation automatique...');
-        await actualiserDonnees();
-    }, 60000);
+        try {
+            await actualiserDonnees();
+        } catch (error) {
+            console.error('Erreur actualisation auto:', error);
+        }
+    }, 90000);
 
     console.log('Dashboard initialisé avec succès');
 });
