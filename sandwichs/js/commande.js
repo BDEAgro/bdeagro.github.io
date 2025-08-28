@@ -1,5 +1,5 @@
 // Configuration API
-const API_URL = "https://script.google.com/macros/s/AKfycbwSDp_vaj1ZjATBibQHi-50OL380L_Rcz7sEFhyzbiuLUygq_TJm-zADHhvpoPFtPWRuQ/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycby9TimFWReFLq4xScofyvhDk2zNouQcsCBZF7vjyfKNLCtGF3dVhZ3_LV52Qb8LYa7ibg/exec";
 
 // État des commandes
 let commandes = {
