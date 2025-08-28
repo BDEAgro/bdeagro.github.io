@@ -116,8 +116,8 @@
 // Configuration API
 const API_URL = "https://script.google.com/macros/s/AKfycbwSDp_vaj1ZjATBibQHi-50OL380L_Rcz7sEFhyzbiuLUygq_TJm-zADHhvpoPFtPWRuQ/exec";
 
-// Fonction pour faire des requêtes GET avec paramètres URL (évite CORS)
-async function makeGetRequest(action, data = {}) {
+// Fonction principale pour faire des requêtes
+async function makeRequest(action, data = {}) {
     const params = new URLSearchParams({
         action: action,
         ...data,
@@ -125,7 +125,7 @@ async function makeGetRequest(action, data = {}) {
     });
     
     const url = `${API_URL}?${params.toString()}`;
-    console.log('Requête GET:', action);
+    console.log('Requête:', action);
 
     try {
         const response = await fetch(url, {
@@ -146,83 +146,15 @@ async function makeGetRequest(action, data = {}) {
         
         return result;
     } catch (error) {
-        console.error('Erreur requête GET', action, ':', error);
-        
-        // Si fetch échoue, essayer avec une image cachée (hack ultime)
-        if (error.message.includes('CORS') || error.message.includes('fetch')) {
-            console.log('Tentative avec méthode alternative...');
-            return await makeRequestViaImage(action, data);
-        }
-        
+        console.error('Erreur requête', action, ':', error);
         throw error;
     }
 }
 
-// Méthode alternative via image + polling (fonctionne toujours)
-async function makeRequestViaImage(action, data = {}) {
-    return new Promise((resolve, reject) => {
-        // Créer un identifiant unique pour cette requête
-        const requestId = 'req_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-        
-        const params = new URLSearchParams({
-            action: action,
-            requestId: requestId,
-            ...data
-        });
-        
-        // URL pour déclencher l'action
-        const triggerUrl = `${API_URL}?${params.toString()}`;
-        
-        // URL pour récupérer le résultat
-        const resultUrl = `${API_URL}?action=getResult&requestId=${requestId}`;
-        
-        console.log('Déclenchement via image:', action);
-        
-        // Déclencher l'action avec une image
-        const img = new Image();
-        img.onload = img.onerror = () => {
-            console.log('Action déclenchée, récupération du résultat...');
-            
-            // Attendre un peu puis récupérer le résultat
-            setTimeout(async () => {
-                try {
-                    let attempts = 0;
-                    const maxAttempts = 10;
-                    
-                    while (attempts < maxAttempts) {
-                        const response = await fetch(resultUrl + '&_t=' + Date.now());
-                        const result = await response.json();
-                        
-                        if (result.ready) {
-                            console.log('Résultat récupéré:', result.data);
-                            resolve(result.data);
-                            return;
-                        }
-                        
-                        attempts++;
-                        await new Promise(r => setTimeout(r, 500)); // Attendre 500ms
-                    }
-                    
-                    reject(new Error('Timeout: impossible de récupérer le résultat'));
-                } catch (error) {
-                    reject(error);
-                }
-            }, 1000);
-        };
-        
-        img.src = triggerUrl;
-        
-        // Timeout de sécurité
-        setTimeout(() => {
-            reject(new Error('Timeout de la requête'));
-        }, 15000);
-    });
-}
-
-// Fonction simplifiée pour vérifier le mot de passe
+// Fonction pour vérifier le mot de passe
 async function verifierMotDePasse(motDePasse) {
     try {
-        const result = await makeGetRequest('verifierMotDePasse', {
+        const result = await makeRequest('verifierMotDePasse', {
             motDePasse: motDePasse
         });
         
@@ -275,7 +207,7 @@ async function verifierConnexionExistante() {
 
     // Vérifier si le token est encore valide côté serveur
     try {
-        const result = await makeGetRequest('verifierToken', {
+        const result = await makeRequest('verifierToken', {
             token: token
         });
         
@@ -347,7 +279,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             } else if (error.message.includes('Failed to fetch') || 
                       error.message.includes('network') ||
                       error.message.includes('CORS')) {
-                messageErreur = 'Problème de connexion. Tentative alternative en cours...';
+                messageErreur = 'Problème de connexion au serveur.';
             }
         }
         

@@ -121,12 +121,29 @@
             padding: 2rem;
         }
 
-        .cors-warning {
-            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
-            border: 1px solid #ffc107;
-            border-radius: 10px;
-            padding: 1rem;
+        .status-indicator {
+            padding: 0.5rem;
+            border-radius: 8px;
             margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .status-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
         }
     </style>
 </head>
@@ -142,10 +159,10 @@
                 </div>
                 <div>
                     <button class="btn btn-admin me-2" id="refreshBtn">
-                        🔄 Actualiser
+                        Actualiser
                     </button>
                     <button class="btn btn-danger-admin" id="logoutBtn">
-                        🚪 Déconnexion
+                        Déconnexion
                     </button>
                 </div>
             </div>
@@ -154,17 +171,9 @@
 
     <!-- Main Content -->
     <div class="container">
-        <!-- Alerte CORS -->
-        <div class="cors-warning" id="corsWarning">
-            <h5>🔧 Mode JSONP activé</h5>
-            <p class="mb-2">Le dashboard utilise JSONP pour contourner les restrictions CORS de Google Apps Script.</p>
-            <div class="d-flex gap-2 flex-wrap">
-                <button class="btn btn-success btn-sm" onclick="actualiserDonnees()">🔄 Tester la connexion</button>
-                <button class="btn btn-info btn-sm" onclick="this.parentElement.parentElement.classList.add('d-none')">✅ Compris</button>
-            </div>
-            <small class="text-muted d-block mt-2">
-                Si les données ne se chargent toujours pas, vérifiez que votre Google Apps Script est bien déployé.
-            </small>
+        <!-- Statut de connexion -->
+        <div id="statusIndicator" class="status-indicator status-warning">
+            Connexion à l'API en cours...
         </div>
 
         <!-- Statistiques rapides -->
@@ -200,7 +209,7 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h3 class="mb-0" style="color: var(--agro-dark-green);">Commandes par client</h3>
                 <span class="last-update">
-                    Actualisation automatique toutes les 45 secondes
+                    Actualisation automatique toutes les 60 secondes
                 </span>
             </div>
 
@@ -294,8 +303,8 @@ let currentToken = null;
 let autoRefreshInterval = null;
 let isRequesting = false;
 
-// Fonction pour faire des requêtes GET (évite totalement CORS)
-async function makeGetRequest(action, data = {}) {
+// Fonction principale pour faire des requêtes (simplifiée)
+async function makeRequest(action, data = {}) {
     const params = new URLSearchParams({
         action: action,
         token: currentToken,
@@ -304,7 +313,7 @@ async function makeGetRequest(action, data = {}) {
     });
     
     const url = `${API_URL}?${params.toString()}`;
-    console.log('Requête GET:', action);
+    console.log('Requête:', action);
 
     try {
         const response = await fetch(url, {
@@ -322,56 +331,17 @@ async function makeGetRequest(action, data = {}) {
         
         return result;
     } catch (error) {
-        console.error('Erreur requête GET', action, ':', error);
+        console.error('Erreur requête', action, ':', error);
         throw error;
     }
 }
 
-// Fonction de fallback avec script tag si fetch échoue
-async function makeScriptRequest(action, data = {}) {
-    return new Promise((resolve, reject) => {
-        const callbackName = 'callback_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-        
-        window[callbackName] = function(response) {
-            document.head.removeChild(script);
-            delete window[callbackName];
-            resolve(response);
-        };
-        
-        const params = new URLSearchParams({
-            action: action,
-            token: currentToken,
-            callback: callbackName,
-            ...data
-        });
-        
-        const script = document.createElement('script');
-        script.src = `${API_URL}?${params.toString()}`;
-        script.onerror = function() {
-            document.head.removeChild(script);
-            delete window[callbackName];
-            reject(new Error('Script request failed'));
-        };
-        
-        document.head.appendChild(script);
-        
-        setTimeout(() => {
-            if (window[callbackName]) {
-                document.head.removeChild(script);
-                delete window[callbackName];
-                reject(new Error('Script request timeout'));
-            }
-        }, 10000);
-    });
-}
-
-// Fonction principale pour faire des requêtes
-async function makeRequest(action, data = {}) {
-    try {
-        return await makeGetRequest(action, data);
-    } catch (error) {
-        console.warn('GET failed, trying script fallback:', error);
-        return await makeScriptRequest(action, data);
+// Fonction pour mettre à jour le statut de connexion
+function mettreAJourStatut(message, type) {
+    const statusDiv = document.getElementById('statusIndicator');
+    if (statusDiv) {
+        statusDiv.textContent = message;
+        statusDiv.className = `status-indicator status-${type}`;
     }
 }
 
@@ -395,9 +365,12 @@ async function getCommandes() {
         }
         
         isRequesting = true;
+        mettreAJourStatut('Récupération des données...', 'warning');
+        
         const result = await makeRequest('getCommandes');
         
         if (result.success) {
+            mettreAJourStatut('Données récupérées avec succès', 'success');
             return result.data || {};
         } else {
             if (result.message && result.message.includes('Token invalide')) {
@@ -409,6 +382,7 @@ async function getCommandes() {
         }
     } catch (error) {
         console.error('Erreur récupération commandes:', error);
+        mettreAJourStatut('Erreur de connexion à l\'API', 'error');
         
         // Si erreur d'authentification, rediriger
         if (error.message && (error.message.includes('Token') || 
@@ -496,8 +470,7 @@ function remplirTableauCommandes(data) {
         const td = document.createElement('td');
         td.colSpan = 3;
         td.textContent = 'Aucune commande pour aujourd\'hui';
-        td.style.textAlign = 'center';
-        td.style.fontStyle = 'italic';
+        td.className = 'empty-state';
         tr.appendChild(td);
         tbody.appendChild(tr);
     }
@@ -701,7 +674,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         console.log('Token valide, chargement des données...');
     } catch (error) {
         console.error('Erreur vérification token:', error);
-        afficherNotification('Erreur de connexion, reconnexion...', 'warning');
+        mettreAJourStatut('Erreur de connexion, reconnexion...', 'error');
         setTimeout(() => redirectToLogin(), 2000);
         return;
     }
@@ -720,7 +693,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         btnActualiser.addEventListener('click', actualiserDonnees);
     }
 
-    // Actualisation automatique toutes les 90 secondes (plus espacé pour éviter les erreurs)
+    // Actualisation automatique toutes les 60 secondes
     autoRefreshInterval = setInterval(async () => {
         console.log('Actualisation automatique...');
         try {
@@ -728,7 +701,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         } catch (error) {
             console.error('Erreur actualisation auto:', error);
         }
-    }, 90000);
+    }, 60000);
 
     console.log('Dashboard initialisé avec succès');
 });
