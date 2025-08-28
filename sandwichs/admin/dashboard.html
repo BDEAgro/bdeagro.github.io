@@ -155,15 +155,15 @@
     <!-- Main Content -->
     <div class="container">
         <!-- Alerte CORS -->
-        <div class="cors-warning d-none" id="corsWarning">
-            <h5>⚠️ Problème de connexion détecté</h5>
-            <p class="mb-2">Si les données ne se chargent pas, voici les solutions disponibles :</p>
+        <div class="cors-warning" id="corsWarning">
+            <h5>🔧 Mode JSONP activé</h5>
+            <p class="mb-2">Le dashboard utilise JSONP pour contourner les restrictions CORS de Google Apps Script.</p>
             <div class="d-flex gap-2 flex-wrap">
-                <button class="btn btn-success btn-sm" id="tryGetBtn">📡 Essayer GET</button>
-                <button class="btn btn-warning btn-sm" id="tryJsonpBtn">🔄 Essayer JSONP</button>
+                <button class="btn btn-success btn-sm" onclick="actualiserDonnees()">🔄 Tester la connexion</button>
+                <button class="btn btn-info btn-sm" onclick="this.parentElement.parentElement.classList.add('d-none')">✅ Compris</button>
             </div>
             <small class="text-muted d-block mt-2">
-                GET fonctionne mieux avec Google Apps Script. JSONP est le plan B.
+                Si les données ne se chargent toujours pas, vérifiez que votre Google Apps Script est bien déployé.
             </small>
         </div>
 
@@ -200,7 +200,7 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h3 class="mb-0" style="color: var(--agro-dark-green);">Commandes par client</h3>
                 <span class="last-update">
-                    Actualisation automatique toutes les 30 secondes
+                    Actualisation automatique toutes les 45 secondes
                 </span>
             </div>
 
@@ -292,7 +292,9 @@
         // Variables globales
         let currentToken = null;
         let autoRefreshInterval = null;
-        let useJsonp = false;
+        let useJsonp = true; // Forcer JSONP dès le départ
+        let lastRequestTime = 0;
+        const MIN_REQUEST_INTERVAL = 2000; // Minimum 2 secondes entre les requêtes
 
         // Fonction JSONP pour contourner CORS
         function makeJsonpRequest(url, params) {
@@ -354,32 +356,27 @@
             return await response.json();
         }
 
-        // Fonction pour faire une requête (GET, POST ou JSONP selon les besoins)
+        // Fonction pour faire une requête avec limitation de débit
         async function makeRequest(params) {
-            if (useJsonp) {
+            // Limitation de débit pour éviter 429
+            const now = Date.now();
+            if (now - lastRequestTime < MIN_REQUEST_INTERVAL) {
+                await new Promise(resolve => setTimeout(resolve, MIN_REQUEST_INTERVAL - (now - lastRequestTime)));
+            }
+            lastRequestTime = Date.now();
+
+            try {
+                // Utiliser JSONP par défaut pour Google Apps Script
                 return await makeJsonpRequest(API_URL, params);
-            } else {
+            } catch (error) {
+                console.error('JSONP failed:', error);
+                
+                // En cas d'échec, essayer GET classique (rare chance de succès mais on tente)
                 try {
-                    // Essayer d'abord avec GET (plus compatible avec Google Apps Script)
                     return await makeGetRequest(params);
-                } catch (error) {
-                    console.log('GET failed, trying POST:', error.message);
-                    
-                    // Si GET échoue, essayer POST
-                    const response = await fetch(API_URL, {
-                        method: 'POST',
-                        mode: 'cors',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(params)
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    return await response.json();
+                } catch (getError) {
+                    console.error('GET also failed:', getError);
+                    throw new Error('Impossible de contacter le serveur. Essayez de rafraîchir la page.');
                 }
             }
         }
@@ -399,15 +396,7 @@
                 }
             } catch (error) {
                 console.error('Erreur récupération commandes:', error);
-                
-                // Si c'est une erreur CORS et qu'on n'utilise pas encore JSONP
-                if (!useJsonp && (error.message.includes('CORS') || error.message.includes('Failed to fetch'))) {
-                    document.getElementById('corsWarning').classList.remove('d-none');
-                    afficherNotification('Problème CORS détecté. Cliquez sur "Essayer avec JSONP" ci-dessus.', 'warning');
-                } else {
-                    afficherNotification('Erreur lors de la récupération des commandes: ' + error.message, 'error');
-                }
-                
+                afficherNotification('Erreur lors de la récupération des commandes: ' + error.message, 'error');
                 return {};
             }
         }
@@ -624,21 +613,7 @@
             }
         }
 
-        // Fonction pour essayer JSONP
-        function essayerJsonp() {
-            useJsonp = true;
-            document.getElementById('corsWarning').classList.add('d-none');
-            afficherNotification('Passage en mode JSONP. Actualisation des données...', 'success');
-            actualiserDonnees();
-        }
 
-        // Fonction pour essayer les requêtes GET standard
-        function essayerGet() {
-            useJsonp = false;
-            document.getElementById('corsWarning').classList.add('d-none');
-            afficherNotification('Essai avec requêtes GET standard...', 'success');
-            actualiserDonnees();
-        }
 
         // Initialisation quand le DOM est prêt
         document.addEventListener('DOMContentLoaded', async function() {
@@ -665,14 +640,9 @@
                 }
             } catch (error) {
                 console.error('Erreur vérification token:', error);
-                
-                // Si erreur CORS, proposer JSONP
-                if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
-                    document.getElementById('corsWarning').classList.remove('d-none');
-                } else {
-                    window.location.href = 'login.html';
-                    return;
-                }
+                afficherNotification('Impossible de vérifier l\'authentification. Reconnexion...', 'warning');
+                window.location.href = 'login.html';
+                return;
             }
 
             // Charger les données initiales
@@ -689,18 +659,8 @@
                 btnActualiser.addEventListener('click', actualiserDonnees);
             }
 
-            const btnJsonp = document.getElementById('tryJsonpBtn');
-            if (btnJsonp) {
-                btnJsonp.addEventListener('click', essayerJsonp);
-            }
-
-            const btnGet = document.getElementById('tryGetBtn');
-            if (btnGet) {
-                btnGet.addEventListener('click', essayerGet);
-            }
-
-            // Actualisation automatique toutes les 30 secondes
-            autoRefreshInterval = setInterval(actualiserDonnees, 30000);
+            // Actualisation automatique toutes les 45 secondes (réduit pour éviter 429)
+            autoRefreshInterval = setInterval(actualiserDonnees, 45000);
         });
     </script>
 </body>
