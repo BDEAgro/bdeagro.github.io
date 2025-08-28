@@ -79,6 +79,28 @@
         .back-link a:hover {
             color: var(--agro-green);
         }
+
+        .debug-info {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .debug-info h6 {
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+
+        .debug-info pre {
+            background: white;
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin: 0;
+            font-size: 0.75rem;
+        }
     </style>
 </head>
 
@@ -106,6 +128,12 @@
             <div class="back-link">
                 <a href="../commande.html">&larr; Retour à la commande</a>
             </div>
+
+            <!-- Debug info (masqué par défaut) -->
+            <div class="debug-info" id="debugInfo" style="display: none;">
+                <h6>Informations de debug :</h6>
+                <div id="debugContent"></div>
+            </div>
         </div>
     </div>
 
@@ -116,39 +144,116 @@
 // Configuration API
 const API_URL = "https://script.google.com/macros/s/AKfycby9TimFWReFLq4xScofyvhDk2zNouQcsCBZF7vjyfKNLCtGF3dVhZ3_LV52Qb8LYa7ibg/exec";
 
-// Fonction principale pour faire des requêtes
-async function makeRequest(action, data = {}) {
-    const params = new URLSearchParams({
-        action: action,
-        ...data,
-        _t: Date.now() // Cache buster
-    });
-    
-    const url = `${API_URL}?${params.toString()}`;
-    console.log('Requête:', action);
+// Fonction JSONP pour contourner CORS
+function makeJSONPRequest(action, data = {}) {
+    return new Promise((resolve, reject) => {
+        const callbackName = 'jsonp_callback_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+        const timeoutId = setTimeout(() => {
+            cleanup();
+            reject(new Error('Timeout de la requête JSONP'));
+        }, 15000);
 
+        function cleanup() {
+            if (window[callbackName]) {
+                delete window[callbackName];
+            }
+            const script = document.getElementById(callbackName);
+            if (script && script.parentNode) {
+                script.parentNode.removeChild(script);
+            }
+            clearTimeout(timeoutId);
+        }
+
+        window[callbackName] = function(response) {
+            cleanup();
+            resolve(response);
+        };
+
+        const params = new URLSearchParams({
+            action: action,
+            callback: callbackName,
+            ...data,
+            _t: Date.now()
+        });
+
+        const script = document.createElement('script');
+        script.id = callbackName;
+        script.src = `${API_URL}?${params.toString()}`;
+        script.onerror = function() {
+            cleanup();
+            reject(new Error('Erreur de chargement du script JSONP'));
+        };
+
+        document.head.appendChild(script);
+    });
+}
+
+// Fonction pour faire des requêtes avec fallback JSONP
+async function makeRequest(action, data = {}) {
+    console.log('Tentative de requête:', action);
+    
+    // Méthode 1 : Fetch normal
     try {
+        const params = new URLSearchParams({
+            action: action,
+            ...data,
+            _t: Date.now()
+        });
+        
+        const url = `${API_URL}?${params.toString()}`;
+        
         const response = await fetch(url, {
             method: 'GET',
             mode: 'cors',
-            credentials: 'omit',
-            headers: {
-                'Accept': 'application/json'
-            }
+            credentials: 'omit'
         });
 
         if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            throw new Error(`HTTP ${response.status}`);
         }
 
         const result = await response.json();
-        console.log('Réponse reçue pour', action, ':', result.success ? 'SUCCESS' : 'ERROR');
-        
+        console.log('Fetch réussi:', result);
         return result;
-    } catch (error) {
-        console.error('Erreur requête', action, ':', error);
-        throw error;
+        
+    } catch (fetchError) {
+        console.warn('Fetch échoué, tentative JSONP:', fetchError.message);
+        
+        // Méthode 2 : JSONP fallback
+        try {
+            const result = await makeJSONPRequest(action, data);
+            console.log('JSONP réussi:', result);
+            return result;
+        } catch (jsonpError) {
+            console.error('JSONP échoué aussi:', jsonpError.message);
+            
+            // Afficher les infos de debug
+            showDebugInfo(fetchError, jsonpError, action, data);
+            throw new Error('Impossible de se connecter au serveur');
+        }
     }
+}
+
+// Afficher les informations de debug
+function showDebugInfo(fetchError, jsonpError, action, data) {
+    const debugDiv = document.getElementById('debugInfo');
+    const debugContent = document.getElementById('debugContent');
+    
+    debugContent.innerHTML = `
+        <p><strong>Action:</strong> ${action}</p>
+        <p><strong>Erreur Fetch:</strong> ${fetchError.message}</p>
+        <p><strong>Erreur JSONP:</strong> ${jsonpError.message}</p>
+        <p><strong>URL API:</strong> <a href="${API_URL}" target="_blank">${API_URL}</a></p>
+        <button class="btn btn-sm btn-secondary mt-2" onclick="testDirectURL()">Tester URL directement</button>
+    `;
+    
+    debugDiv.style.display = 'block';
+}
+
+// Test direct de l'URL
+function testDirectURL() {
+    const testUrl = `${API_URL}?action=verifierMotDePasse&motDePasse=test`;
+    window.open(testUrl, '_blank');
 }
 
 // Fonction pour vérifier le mot de passe
@@ -242,6 +347,9 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         return;
     }
     
+    // Masquer le debug si affiché
+    document.getElementById('debugInfo').style.display = 'none';
+    
     // Désactiver le bouton pendant la vérification
     const textOriginal = btnConnexion.textContent;
     btnConnexion.disabled = true;
@@ -271,15 +379,12 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         let messageErreur = 'Erreur de connexion. Veuillez réessayer.';
         
         if (error.message) {
-            if (error.message.includes('Mot de passe incorrect') || 
-                error.message.includes('incorrect')) {
+            if (error.message.includes('Mot de passe incorrect')) {
                 messageErreur = 'Mot de passe incorrect.';
-            } else if (error.message.includes('HTTP')) {
-                messageErreur = 'Problème de connexion au serveur.';
-            } else if (error.message.includes('Failed to fetch') || 
-                      error.message.includes('network') ||
-                      error.message.includes('CORS')) {
-                messageErreur = 'Problème de connexion au serveur.';
+            } else if (error.message.includes('serveur')) {
+                messageErreur = 'Impossible de se connecter au serveur. Vérifiez le déploiement de votre Google Apps Script.';
+            } else {
+                messageErreur = error.message;
             }
         }
         
@@ -295,12 +400,25 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 // Vérifier la connexion existante au chargement de la page
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('Page de connexion chargée');
+    console.log('URL API utilisée:', API_URL);
     
     // Petite pause pour laisser le DOM se stabiliser
     setTimeout(async () => {
         await verifierConnexionExistante();
     }, 100);
 });
+
+// Fonction utilitaire pour tester la connexion (peut être appelée depuis la console)
+window.testConnection = async function() {
+    try {
+        const result = await makeRequest('verifierMotDePasse', { motDePasse: 'test' });
+        console.log('Test de connexion:', result);
+        return result;
+    } catch (error) {
+        console.error('Test de connexion échoué:', error);
+        return error;
+    }
+};
     </script>
 </body>
 
