@@ -162,8 +162,15 @@ function highlightActiveNavLink() {
 function initSmoothScroll() {
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
+            const href = this.getAttribute('href');
+            
+            // Ignorer les liens avec juste "#" ou "#" vide
+            if (href === '#' || href.length <= 1) {
+                return; // Ne pas empêcher le comportement par défaut pour les dropdowns
+            }
+            
             e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
+            const target = document.querySelector(href);
             if (target) {
                 target.scrollIntoView({
                     behavior: 'smooth'
@@ -215,10 +222,6 @@ function getPageConfig() {
         '/club.html': {
             title: 'Le Club | BDE Agro - UCLouvain',
             description: 'Présentation du Club du BDE Agro de l\'UCLouvain.'
-        },
-        '/sandwichs/commande.html': {
-            title: 'Commander - Club Agro | BDE Agro - UCLouvain',
-            description: 'Commandez vos sandwichs au Club Agro - BDE Agro UCLouvain'
         },
         '/drive.html': {
             title: 'Le Drive | BDE Agro - UCLouvain',
