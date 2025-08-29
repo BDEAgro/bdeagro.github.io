@@ -30,15 +30,15 @@ function loadHead(pageTitle, pageDescription) {
     
     // Ajout des liens CSS s'ils n'existent pas
     const cssLinks = [
-        { rel: 'shortcut icon', href: 'assets/img/favicon.ico', type: 'image/x-icon' },
-        { rel: 'apple-touch-icon', href: 'apple-touch-icon.png', sizes: '180x180' },
+        { rel: 'shortcut icon', href: '/assets/img/favicon.ico', type: 'image/x-icon' },
+        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png', sizes: '180x180' },
         { 
             rel: 'stylesheet', 
             href: 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css',
             integrity: 'sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH',
             crossorigin: 'anonymous'
         },
-        { rel: 'stylesheet', href: 'assets/css/style.css' }
+        { rel: 'stylesheet', href: '/assets/css/style.css' }
     ];
     
     cssLinks.forEach(linkData => {
@@ -230,6 +230,10 @@ function getPageConfig() {
         '/links.html': {
             title: 'Contact | BDE Agro - UCLouvain',
             description: 'Contactez le BDE Agro de l\'UCLouvain.'
+        },
+        '/sandwichs/commande.html': {
+            title: 'Commander - Club Agro | BDE Agro - UCLouvain',
+            description: 'Commandez vos sandwichs au Club Agro - BDE Agro UCLouvain'
         }
     };
     
