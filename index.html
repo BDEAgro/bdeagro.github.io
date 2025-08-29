@@ -4,86 +4,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Site officiel du BDE Agro de la Facult&#xE9; des Bioing&#xE9;nieurs de l&#x27;UCLouvain.">
-    <meta name="keywords" content="bioing&#xE9;nieur, uclouvain, discord, bde, agro, cercle, louvain, facult&#xE9;, club, drive, ucl">
-    <meta name="author" content="BDE Agro">
-    <title>Accueil | BDE Agro - UCLouvain</title>
-    <link rel="shortcut icon" href="assets/img/favicon.ico" type="image/x-icon">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png" sizes="180x180">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <!-- Tout le reste sera chargé par JavaScript ! -->
+    
+    <!-- Facebook SDK (seul élément spécifique à cette page) -->
     <div id="fb-root"></div>
     <script async defer crossorigin="anonymous" src="https://connect.facebook.net/fr_FR/sdk.js#xfbml=1&version=v20.0"
         nonce="A9lVaz6a"></script>
 </head>
 
 <body class="d-flex flex-column h-100">
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg" style="background-color: #A8C302;">
-        <div class="container">
-            <a href="/index.html" class="navbar-brand me-2"><img src="/assets/img/logo.jpg" alt="" width="35"
-                    height="35"></a>
-            <a href="/index.html" class="navbar-brand link-light">BDE Agro</a>
-
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarToggler"
-                aria-controls="navbarToggler" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="navbarToggler">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link link-light" href="/index.html">Accueil</a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle link-light" href="#" role="button" data-bs-toggle="dropdown"
-                            aria-expanded="false">
-                            Le BDE
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/mission.html">Objectifs & Missions</a></li>
-                            <li><a class="dropdown-item" href="/team.html">L'équipe</a></li>
-                            <li><a class="dropdown-item" href="/events.html">Nos Events</a></li>
-                        </ul>
-                    </li>
-                   <li class="nav-item dropdown">
-                       <a class="nav-link dropdown-toggle link-light" href="#" role="button" data-bs-toggle="dropdown"
-                           aria-expanded="false">
-                           Le Club
-                       </a>
-                       <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/club.html">Présentation</a></li>
-                            <li><a class="dropdown-item" href="/sandwichs/commande.html">Commander des sandwichs</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link link-light" href="https://www.instagram.com/buddies_agro/" target="_blank"
-                            rel="noopener">Les Buddies</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link link-light" href="https://www.instagram.com/cercle_agro/" target="_blank"
-                            rel="noopener">Le Cercle Agro</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link link-light" href="/drive.html">Le Drive</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link link-light" href="/links.html">Contact</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="btn btn-success" href="https://discord.gg/6X54kfAVGX" target="_blank"
-                            rel="noopener">Discord</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-    <!-- End Navigation -->
+    <!-- Container pour la navbar -->
+    <div id="navbar-container"></div>
 
     <!-- Page Content -->
     <main>
-
         <!-- Carousel -->
         <div id="carouselExampleCaptions" class="carousel slide carousel-fade mb-5" data-bs-ride="carousel">
             <div class="carousel-indicators">
@@ -133,7 +67,6 @@
                 <span class="visually-hidden">Next</span>
             </button>
         </div>
-        <!-- End Carousel -->
 
         <!-- Main Content -->
         <div class="container">
@@ -149,7 +82,6 @@
                             <li>Goodies à l'image du BDE & de la faculté</li>
                         </ul>
                     </div>
-
                 </div>
 
                 <div class="col-md-4">
@@ -178,32 +110,21 @@
                             <li><a href="mailto:bde-agro@uclouvain.be">Mail</a></li>
                         </ul>
                     </div>
-
                 </div>
             </div>
-
         </div>
-        <!-- End Main Content -->
-
-
     </main>
-    <!-- End Page Content -->
 
-
-
-
-    <!-- Footer -->
-    <footer class="footer mt-5 py-3 bg-body-tertiary">
-        <div class="container text-center">
-            <span class="text-body-secondary">&copy; 2024 - BDE Agro (Université Catholique de Louvain)</span>
-        </div>
-    </footer>
-    <!-- End Footer -->
-
+    <!-- Container pour le footer -->
+    <div id="footer-container"></div>
+    
+    <!-- UN SEUL script Bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous">
-    </script>
-    <script src="assets/js/script.js"></script>
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" 
+        crossorigin="anonymous"></script>
+    
+    <!-- UN SEUL script personnalisé -->
+    <script src="assets/js/scripts.js"></script>
 </body>
 
 </html>

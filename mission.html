@@ -1,80 +1,15 @@
 <!DOCTYPE html>
-<html lang="fr" dir="ltr">
+<html lang="fr" dir="ltr" class="h-100">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nos Objectifs & Missions | BDE Agro - UCLouvain</title>
-    <link rel="shortcut icon" href="assets/img/favicon.ico" type="image/x-icon">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png" sizes="180x180">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <!-- Tout le reste sera chargé par JavaScript ! -->
 </head>
 
-<body class="h-100">
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg" style="background-color: #A8C302;">
-        <div class="container">
-            <a href="/index.html" class="navbar-brand me-2"><img src="/assets/img/logo.jpg" alt="" width="35"
-                    height="35"></a>
-            <a href="/index.html" class="navbar-brand link-light">BDE Agro</a>
-
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarToggler"
-                aria-controls="navbarToggler" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="navbarToggler">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link link-light" href="index.html">Accueil</a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle link-light" href="#" role="button" data-bs-toggle="dropdown"
-                            aria-expanded="false">
-                            Le BDE
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item active" href="/mission.html">Objectifs & Missions</a></li>
-                            <li><a class="dropdown-item" aria-current="page" href="/team.html">L'équipe</a></li>
-                            <li><a class="dropdown-item" href="/events.html">Nos Events</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item dropdown">
-                       <a class="nav-link dropdown-toggle link-light" href="#" role="button" data-bs-toggle="dropdown"
-                           aria-expanded="false">
-                           Le Club
-                       </a>
-                       <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/club.html">Présentation</a></li>
-                            <li><a class="dropdown-item" href="/sandwichs/commande.html">Commander des sandwichs</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link link-light" href="https://www.instagram.com/buddies_agro/" target="_blank"
-                            rel="noopener">Les Buddies</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link link-light" href="https://www.instagram.com/cercle_agro/" target="_blank"
-                            rel="noopener">Le Cercle Agro</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link link-light" href="/drive.html">Le Drive</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link link-light" href="/links.html">Contact</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="btn btn-success" href="https://discord.gg/6X54kfAVGX" target="_blank"
-                            rel="noopener">Discord</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-    <!-- End Navigation -->
-
+<body class="d-flex flex-column h-100">
+    <!-- Container pour la navbar -->
+    <div id="navbar-container"></div>
 
     <!-- Page Content -->
     <main>
@@ -84,7 +19,6 @@
             </div>
 
             <div class="container">
-
                 <h3>Qu'est-ce que le BDE Agro ?</h3>
                 <p>Le Bureau des Étudiants (BDE) de la Faculté des bioingénieurs est un privilège offert par l'UCLouvain aux
                     étudiants, comprenant des représentants de chaque année ainsi que des volontaires. Même si certains
@@ -94,51 +28,40 @@
                 <h3>Quel est le rôle du Bureau des Étudiants ?</h3>
                 <p>Le BDE a pour mission principale de faciliter la communication entre les étudiants et la faculté. Il
                     recueille les retours, suggestions et préoccupations des étudiants au fil du quadrimestre et les
-                    transmet aux différentes commissions, telles que la commission de programme ou le comité d’année. Il transmet
+                    transmet aux différentes commissions, telles que la commission de programme ou le comité d'année. Il transmet
                     également les informations importantes venant des professeurs, des assistants et de la Doyenne pour
                     s'assurer que les étudiants les reçoivent efficacement.</p>
     
-                <p>En plus de cela, le BDE accompagne les nouveaux étudiants en les aidant à s’orienter sur le campus et en
+                <p>En plus de cela, le BDE accompagne les nouveaux étudiants en les aidant à s'orienter sur le campus et en
                     les guidant dans leurs démarches (localisation des salles de cours, bureaux des secrétaires,
                     localisation
                     des professeurs, etc.).</p>
     
                 <p>Nous organisons aussi diverses activités comme la vente des vestes de la faculté, le souper facultaire,
-                    ou encore la vente des pulls d’année et l’organisation des soupers d’année. </p>
+                    ou encore la vente des pulls d'année et l'organisation des soupers d'année.</p>
     
                 <p>En somme, le BDE est là pour aider les étudiants à vivre une expérience universitaire plus agréable et
-                    productive. Nous vous encourageons vivement à nous solliciter, car le BDE n’est rien sans les étudiants
-                    pour l’animer.</p>
+                    productive. Nous vous encourageons vivement à nous solliciter, car le BDE n'est rien sans les étudiants
+                    pour l'animer.</p>
     
-    
-                <p>Au plaisir de vous  accompagner,
+                <p>Au plaisir de vous accompagner,
                     <br>
-                    L’équipe BDE Agro 🌱
+                    L'équipe BDE Agro 🌱
                 </p>
-                
             </div>
-
         </div>
     </main>
-    <!-- End Page Content -->
 
-
-
-
-
-
-    <!-- Footer -->
-    <footer class="footer mt-5 py-3 bg-body-tertiary">
-        <div class="container text-center">
-            <span class="text-body-secondary">&copy; 2024 - BDE Agro (Université Catholique de Louvain)</span>
-        </div>
-    </footer>
-    <!-- End Footer -->
-
+    <!-- Container pour le footer -->
+    <div id="footer-container"></div>
+    
+    <!-- UN SEUL script Bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous">
-        </script>
-    <script src="assets/js/script.js"></script>
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" 
+        crossorigin="anonymous"></script>
+    
+    <!-- UN SEUL script personnalisé -->
+    <script src="assets/js/scripts.js"></script>
 </body>
 
 </html>
