@@ -216,6 +216,10 @@ function getPageConfig() {
             title: 'Le Club | BDE Agro - UCLouvain',
             description: 'Présentation du Club du BDE Agro de l\'UCLouvain.'
         },
+        '/sandwichs/commande.html': {
+            title: 'Commander - Club Agro | BDE Agro - UCLouvain',
+            description: 'Commandez vos sandwichs au Club Agro - BDE Agro UCLouvain'
+        },
         '/drive.html': {
             title: 'Le Drive | BDE Agro - UCLouvain',
             description: 'Accédez au Drive du BDE Agro avec toutes les ressources.'
