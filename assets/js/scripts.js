@@ -114,14 +114,6 @@ function loadNavbar() {
                             </ul>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link link-light" href="https://www.instagram.com/buddies_agro/" target="_blank"
-                                rel="noopener">Les Buddies</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link link-light" href="https://www.instagram.com/cercle_agro/" target="_blank"
-                                rel="noopener">Le Cercle Agro</a>
-                        </li>
-                        <li class="nav-item">
                             <a class="nav-link link-light" href="/drive.html">Le Drive</a>
                         </li>
                         <li class="nav-item">
