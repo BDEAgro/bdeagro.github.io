@@ -442,13 +442,77 @@
             }, 5000);
         }
 
+        // Fonction pour vérifier si les commandes sont ouvertes
+        function commandesOuvertes() {
+            const maintenant = new Date();
+            const heure = maintenant.getHours();
+
+            // Bloqué entre 12h00 et 13h00
+            return !(heure >= 12 && heure < 13);
+        }
+
+        // Fonction pour afficher le message de fermeture
+        function afficherMessageFermeture() {
+            const container = document.querySelector('.sandwich-container');
+            container.innerHTML = `
+                <div class="sandwich-header" style="background: linear-gradient(135deg, #FF9800, #F57C00);">
+                    <h1>⏰ Commandes terminées pour aujourd'hui</h1>
+                    <p class="mb-0">Les commandes sont fermées de 12h00 à 13h00</p>
+                </div>
+
+                <div class="alert alert-warning text-center" role="alert" style="font-size: 1.2rem; padding: 2rem;">
+                    <strong>Les commandes du jour sont clôturées !</strong>
+                </div>
+
+                <div class="alert alert-info" role="alert" style="font-size: 1.1rem;">
+                    <h4 style="color: var(--agro-dark-green);">📍 Vous avez encore faim ?</h4>
+                    <p class="mb-2">Vous pouvez passer au <strong>Club Agro</strong> et nous demander s'il reste une baguette pour vous !</p>
+                </div>
+
+                <div class="alert alert-success" role="alert" style="font-size: 1.1rem;">
+                    <h4 style="color: var(--agro-dark-green);">🕐 Commandes pour demain</h4>
+                    <p class="mb-0">Les commandes pour demain commencent à partir de <strong>13h00</strong></p>
+                    <p class="mb-0 mt-2"><small>La page se mettra à jour automatiquement</small></p>
+                </div>
+
+                <div class="text-center mt-4">
+                    <button onclick="location.reload()" class="btn btn-submit text-white">
+                        Actualiser la page
+                    </button>
+                </div>
+            `;
+        }
+
+        // Vérifier l'état des commandes au chargement
+        function verifierEtatCommandes() {
+            if (!commandesOuvertes()) {
+                afficherMessageFermeture();
+                return false;
+            }
+            return true;
+        }
+
+        // Vérifier toutes les minutes si on doit bloquer
+        setInterval(() => {
+            if (!commandesOuvertes()) {
+                afficherMessageFermeture();
+            }
+        }, 60000); // Vérifier toutes les 60 secondes
+
         // Gestionnaire de soumission du formulaire
         document.getElementById('commandeForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
+
+            // Vérifier si les commandes sont ouvertes
+            if (!commandesOuvertes()) {
+                afficherNotification('Les commandes sont fermées entre 12h00 et 13h00.', 'error');
+                afficherMessageFermeture();
+                return;
+            }
+
             const prenom = document.getElementById('prenom').value.trim();
             const commentaire = document.getElementById('commentaire').value.trim();
-            
+
             if (!prenom) {
                 afficherNotification('Veuillez entrer votre prénom.', 'error');
                 return;
@@ -480,6 +544,9 @@
                 btnEnvoyer.textContent = textOriginal;
             }
         });
+
+        // Vérifier au chargement de la page
+        verifierEtatCommandes();
     </script>
 </body>
 
