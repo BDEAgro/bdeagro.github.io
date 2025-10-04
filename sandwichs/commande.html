@@ -322,29 +322,92 @@
             });
         }
 
+        // Fonction pour afficher la confirmation
+        function afficherConfirmation(data) {
+            const sandwichsNoms = {
+                berger: 'Sandwich Berger (2,50€)',
+                club: 'Sandwich Club (3,00€)',
+                meat_free: 'Sandwich Meat Free (2,50€)',
+                italien: 'Sandwich Italien (3,00€)',
+                norvegien: 'Sandwich Norvégien (3,00€)'
+            };
+
+            let listeSandwichs = '';
+            let totalSandwichs = 0;
+
+            Object.keys(data).forEach(key => {
+                if (key !== 'prenom' && key !== 'commentaire' && data[key] > 0) {
+                    listeSandwichs += `
+                        <div class="sandwich-item">
+                            <div class="sandwich-info">
+                                <div class="sandwich-title">${sandwichsNoms[key]}</div>
+                            </div>
+                            <div class="qty-display">× ${data[key]}</div>
+                        </div>
+                    `;
+                    totalSandwichs += data[key];
+                }
+            });
+
+            const container = document.querySelector('.sandwich-container');
+            container.innerHTML = `
+                <div class="sandwich-header" style="background: linear-gradient(135deg, #4CAF50, #2e7d32);">
+                    <h1>✓ Commande confirmée !</h1>
+                    <p class="mb-0">Merci d'avoir commandé</p>
+                </div>
+
+                <div class="alert alert-success text-center" role="alert" style="font-size: 1.1rem; padding: 1.5rem;">
+                    <strong>Votre commande a été enregistrée avec succès, ${data.prenom} !</strong>
+                </div>
+
+                <div class="mb-4">
+                    <h3 class="mb-3" style="color: var(--agro-dark-green);">Résumé de votre commande</h3>
+                    ${listeSandwichs}
+                    <div class="text-end mt-3">
+                        <strong style="font-size: 1.2rem;">Total : ${totalSandwichs} sandwich${totalSandwichs > 1 ? 's' : ''}</strong>
+                    </div>
+                </div>
+
+                ${data.commentaire ? `
+                    <div class="alert alert-info" role="alert">
+                        <strong>Votre commentaire :</strong><br>
+                        ${data.commentaire}
+                    </div>
+                ` : ''}
+
+                <div class="alert alert-warning" role="alert">
+                    <strong>N'oubliez pas :</strong><br>
+                    • Récupération dès 12h45 au Club Agro<br>
+                    • Le paiement se fait sur place (carte ou cash)<br>
+                    • Merci de votre confiance !
+                </div>
+
+                <div class="text-center mt-4">
+                    <button onclick="location.reload()" class="btn btn-submit text-white">
+                        Faire une nouvelle commande
+                    </button>
+                </div>
+            `;
+        }
+
         // Fonction principale d'envoi
         async function envoyerCommande(data) {
             console.log('=== DÉBUT ENVOI COMMANDE JSONP ===');
             console.log('Données à envoyer:', data);
-            
+
             try {
                 const result = await envoyerCommandeJSONP(data);
                 console.log('Réponse reçue:', result);
-                
-                afficherNotification('Commande enregistrée avec succès!', 'success');
-                
-                document.getElementById('commandeForm').reset();
-                commandes = { berger: 0, club: 0, meat_free: 0, italien: 0, norvegien: 0 };
-                Object.keys(commandes).forEach(type => {
-                    document.getElementById(type + '-qty').textContent = '0';
-                });
-                
+
+                // Afficher la page de confirmation
+                afficherConfirmation(data);
+
             } catch (error) {
                 console.error('=== ERREUR COMPLÈTE ===');
                 console.error('Message:', error.message);
-                
+
                 let messageErreur = 'Erreur lors de l\'envoi de la commande. ';
-                
+
                 if (error.message.includes('Timeout')) {
                     messageErreur += 'Délai d\'attente dépassé. Vérifiez votre connexion.';
                 } else if (error.message.includes('Erreur de réseau')) {
@@ -352,10 +415,10 @@
                 } else {
                     messageErreur += 'Veuillez réessayer.';
                 }
-                
+
                 afficherNotification(messageErreur, 'error');
                 throw error;
-                
+
             } finally {
                 console.log('=== FIN ENVOI COMMANDE JSONP ===');
             }
