@@ -114,7 +114,7 @@ function loadNavbar() {
                             </ul>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link link-light" href="/books.html">Books</a>
+                            <a class="nav-link link-light" href="/books.html">Livres d'occasions</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link link-light" href="/drive.html">Le Drive</a>
