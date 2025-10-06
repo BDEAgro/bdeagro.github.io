@@ -114,6 +114,9 @@ function loadNavbar() {
                             </ul>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link link-light" href="/livres.html">Livres d'Occasion</a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link link-light" href="/drive.html">Le Drive</a>
                         </li>
                         <li class="nav-item">
@@ -226,9 +229,13 @@ function getPageConfig() {
         '/sandwichs/commande.html': {
             title: 'Commander - Club Agro | BDE Agro - UCLouvain',
             description: 'Commandez vos sandwichs au Club Agro - BDE Agro UCLouvain'
+        },
+        '/livres.html': {
+            title: 'Livres d\'Occasion | BDE Agro - UCLouvain',
+            description: 'Achetez et vendez vos livres de cours entre étudiants - BDE Agro UCLouvain'
         }
     };
-    
+
     return configs[path] || {
         title: 'BDE Agro - UCLouvain',
         description: 'Site officiel du BDE Agro de la Faculté des Bioingénieurs de l\'UCLouvain.'

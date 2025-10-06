@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr" class="h-100">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Livres d'Occasion - BDE Agro</title>
+    <!-- Tout le reste sera chargé par JavaScript ! -->
+    <style>
+        :root {
+            --agro-green: #A8C302;
+            --agro-dark-green: #2e7d32;
+            --agro-light-green: #c9e265;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, var(--agro-green), var(--agro-dark-green));
+            color: white;
+            text-align: center;
+            padding: 3rem 2rem;
+            border-radius: 20px;
+            margin: 2rem 0;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .page-header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+        }
+
+        .section-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .section-title {
+            color: var(--agro-dark-green);
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 3px solid var(--agro-green);
+            font-size: 1.8rem;
+        }
+
+        .book-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-left: 5px solid var(--agro-green);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .book-card:hover {
+            transform: translateX(8px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            border-left-width: 8px;
+        }
+
+        .book-title {
+            color: var(--agro-dark-green);
+            font-weight: 700;
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .book-author {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 0.75rem;
+        }
+
+        .book-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .book-detail-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .book-price {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--agro-green);
+            margin: 1rem 0;
+        }
+
+        .book-contact {
+            background: #f0f4f0;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+        }
+
+        .badge-custom {
+            background: linear-gradient(135deg, var(--agro-green), var(--agro-light-green));
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .badge-state {
+            padding: 0.4rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .state-neuf { background-color: #4CAF50; color: white; }
+        .state-bon { background-color: #8BC34A; color: white; }
+        .state-correct { background-color: #FFC107; color: #333; }
+        .state-usage { background-color: #FF9800; color: white; }
+
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+            padding: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--agro-green);
+            box-shadow: 0 0 0 0.2rem rgba(168, 195, 2, 0.25);
+        }
+
+        .form-label {
+            color: var(--agro-dark-green);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--agro-green), var(--agro-dark-green));
+            border: none;
+            padding: 12px 30px;
+            font-weight: 700;
+            border-radius: 50px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(168, 195, 2, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(168, 195, 2, 0.5);
+            background: linear-gradient(135deg, var(--agro-dark-green), var(--agro-green));
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            border: none;
+            padding: 8px 20px;
+            font-weight: 600;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .filter-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+        }
+
+        .alert-info {
+            background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+            border-left: 4px solid #0dcaf0;
+            border-radius: 12px;
+            padding: 1.25rem;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: #6c757d;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .notification {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 1050;
+            min-width: 320px;
+            animation: fadeIn 0.4s ease-out;
+        }
+    </style>
+</head>
+
+<body class="d-flex flex-column h-100">
+    <!-- Container pour la navbar -->
+    <div id="navbar-container"></div>
+
+    <!-- Main Content -->
+    <main class="flex-shrink-0">
+        <div class="container">
+            <!-- Header -->
+            <div class="page-header">
+                <h1>📚 Livres d'Occasion</h1>
+                <p>Achetez et vendez vos livres entre étudiants</p>
+            </div>
+
+            <!-- Information -->
+            <div class="alert alert-info" role="alert">
+                <h5 style="color: #055160;"><strong>ℹ️ Comment ça marche ?</strong></h5>
+                <p class="mb-2">📖 <strong>Pour vendre :</strong> Remplissez le formulaire ci-dessous avec les informations de votre livre</p>
+                <p class="mb-2">💰 <strong>Pour acheter :</strong> Contactez directement le vendeur via l'email ou téléphone indiqué</p>
+                <p class="mb-0">🤝 <strong>Échange :</strong> Le BDE Agro facilite la mise en relation, la transaction se fait entre étudiants</p>
+            </div>
+
+            <!-- Bouton pour afficher/masquer le formulaire -->
+            <div class="text-center mb-4">
+                <button class="btn btn-primary" id="toggleFormBtn" onclick="toggleForm()">
+                    + Déposer une annonce
+                </button>
+            </div>
+
+            <!-- Formulaire de dépôt d'annonce (caché par défaut) -->
+            <div class="section-card" id="formSection" style="display: none;">
+                <h2 class="section-title">📝 Déposer une annonce</h2>
+                <form id="bookForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="titre" class="form-label">Titre du livre *</label>
+                            <input type="text" class="form-control" id="titre" required
+                                   placeholder="Ex: Biologie cellulaire">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="auteur" class="form-label">Auteur(s) *</label>
+                            <input type="text" class="form-control" id="auteur" required
+                                   placeholder="Ex: Jean Dupont">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="cours" class="form-label">Cours/Matière *</label>
+                            <input type="text" class="form-control" id="cours" required
+                                   placeholder="Ex: LBIO1111">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="annee" class="form-label">Année *</label>
+                            <select class="form-select" id="annee" required>
+                                <option value="">Sélectionner...</option>
+                                <option value="BAC1">BAC 1</option>
+                                <option value="BAC2">BAC 2</option>
+                                <option value="BAC3">BAC 3</option>
+                                <option value="MASTER1">Master 1</option>
+                                <option value="MASTER2">Master 2</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="etat" class="form-label">État *</label>
+                            <select class="form-select" id="etat" required>
+                                <option value="">Sélectionner...</option>
+                                <option value="neuf">Neuf</option>
+                                <option value="bon">Bon état</option>
+                                <option value="correct">État correct</option>
+                                <option value="usage">Usagé</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="prix" class="form-label">Prix (€) *</label>
+                            <input type="number" class="form-control" id="prix" required
+                                   placeholder="Ex: 25" min="0" step="0.5">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="isbn" class="form-label">ISBN (optionnel)</label>
+                            <input type="text" class="form-control" id="isbn"
+                                   placeholder="Ex: 978-2-1234-5678-9">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="edition" class="form-label">Édition (optionnel)</label>
+                            <input type="text" class="form-control" id="edition"
+                                   placeholder="Ex: 3ème édition">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description (optionnel)</label>
+                        <textarea class="form-control" id="description" rows="3"
+                                  placeholder="Ajoutez des informations supplémentaires : annotations, surlignage, etc."></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="vendeur" class="form-label">Votre nom *</label>
+                            <input type="text" class="form-control" id="vendeur" required
+                                   placeholder="Ex: Marie D.">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="contact" class="form-label">Contact (Email ou Téléphone) *</label>
+                            <input type="text" class="form-control" id="contact" required
+                                   placeholder="Ex: marie@student.uclouvain.be">
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            Publier l'annonce
+                        </button>
+                        <button type="button" class="btn btn-secondary ms-2" onclick="toggleForm()">
+                            Annuler
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Filtres -->
+            <div class="section-card">
+                <h2 class="section-title">🔍 Rechercher un livre</h2>
+                <div class="filter-section">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" id="searchTitle"
+                                   placeholder="🔎 Rechercher par titre ou auteur...">
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="filterAnnee">
+                                <option value="">Toutes les années</option>
+                                <option value="BAC1">BAC 1</option>
+                                <option value="BAC2">BAC 2</option>
+                                <option value="BAC3">BAC 3</option>
+                                <option value="MASTER1">Master 1</option>
+                                <option value="MASTER2">Master 2</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="filterEtat">
+                                <option value="">Tous les états</option>
+                                <option value="neuf">Neuf</option>
+                                <option value="bon">Bon état</option>
+                                <option value="correct">État correct</option>
+                                <option value="usage">Usagé</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-secondary w-100" onclick="resetFilters()">
+                                Réinitialiser
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Liste des livres -->
+                <div id="booksList">
+                    <!-- Les livres seront chargés ici par JavaScript -->
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📚</div>
+                        <h4>Aucun livre disponible pour le moment</h4>
+                        <p>Soyez le premier à déposer une annonce !</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+
+    <!-- Container pour le footer -->
+    <div id="footer-container"></div>
+
+    <!-- Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+
+    <!-- Script personnalisé -->
+    <script src="assets/js/scripts.js"></script>
+
+    <!-- Script spécifique à cette page -->
+    <script src="assets/js/livres.js"></script>
+</body>
+
+</html>
