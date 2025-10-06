@@ -114,7 +114,7 @@ function loadNavbar() {
                             </ul>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link link-light" href="/livres.html">Livres d'Occasion</a>
+                            <a class="nav-link link-light" href="/books.html">Books</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link link-light" href="/drive.html">Le Drive</a>
@@ -230,8 +230,8 @@ function getPageConfig() {
             title: 'Commander - Club Agro | BDE Agro - UCLouvain',
             description: 'Commandez vos sandwichs au Club Agro - BDE Agro UCLouvain'
         },
-        '/livres.html': {
-            title: 'Livres d\'Occasion | BDE Agro - UCLouvain',
+        '/books.html': {
+            title: 'Books | BDE Agro - UCLouvain',
             description: 'Achetez et vendez vos livres de cours entre étudiants - BDE Agro UCLouvain'
         }
     };
